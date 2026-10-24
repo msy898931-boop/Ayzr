@@ -2,7 +2,15 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="color-scheme" content="dark"/>
+<meta name="theme-color" content="#0a0b12"/>
+<meta name="description" content="{{ brand }} — منصة تحليل الأسواق بالذكاء الاصطناعي: تحليل الشارت، كشف تزوير الإشارات، المستشار الذكي، ومناطق العرض والطلب."/>
+<meta name="robots" content="noindex"/>
+<meta property="og:type" content="website"/>
+<meta property="og:title" content="{{ brand }}"/>
+<meta property="og:description" content="حلّل أي شارت في أقل من 30 ثانية — مدعوم بـ12 وكيل ذكاء اصطناعي."/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237c5cff'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Cpath d='M8 21l5-6 4 3 7-8' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"/>
 <title>{{ brand }} — منصة تحليل الأسواق بالذكاء الاصطناعي</title>
 <style nonce="{{ csp_nonce }}">
 :root{
@@ -20,7 +28,13 @@ header{position:sticky;top:0;z-index:40;backdrop-filter:blur(12px);
   background:rgba(10,11,18,.82);border-bottom:1px solid var(--line)}
 .hrow{display:flex;align-items:center;gap:12px;padding:12px 0}
 .logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:.5px}
-.logo .dot{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2))}
+.logo .dot{width:30px;height:30px;border-radius:9px;flex:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  box-shadow:0 4px 14px rgba(124,92,255,.35)}
+.burger{display:none;align-items:center;justify-content:center;width:38px;height:38px;
+  border-radius:11px;background:var(--panel);border:1px solid var(--line);
+  color:var(--txt);font-size:17px;cursor:pointer;flex:none;line-height:1}
+.burger:hover{border-color:var(--accent)}
 .hspace{flex:1}
 .btn{background:linear-gradient(135deg,var(--accent),#5b3df0);color:#fff;border:0;
   padding:10px 18px;border-radius:11px;font-weight:700;font-size:14px;cursor:pointer}
@@ -35,18 +49,25 @@ header{position:sticky;top:0;z-index:40;backdrop-filter:blur(12px);
 .side{position:sticky;top:57px;height:calc(100vh - 57px);overflow:auto;
   padding:16px 12px;border-inline-end:1px solid var(--line);
   background:rgba(18,20,31,.45);display:flex;flex-direction:column;gap:3px}
-.navlink{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:11px;
-  color:var(--muted);font-size:14.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+.navlink{position:relative;display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:11px;
+  color:var(--muted);font-size:14.5px;font-weight:600;cursor:pointer;white-space:nowrap;
+  transition:background .15s,color .15s}
 .navlink:hover{background:var(--panel);color:var(--txt)}
 .navlink.active{color:var(--txt);
   background:linear-gradient(135deg,rgba(124,92,255,.20),rgba(34,211,238,.10))}
+.navlink.active::before{content:"";position:absolute;inset-inline-start:-12px;top:50%;
+  transform:translateY(-50%);width:3px;height:22px;border-radius:0 3px 3px 0;background:var(--accent)}
 .navlink .ic{font-size:17px;width:22px;text-align:center;flex:none}
+.navlink .tip{display:none}
 .seplabel{font-size:11px;color:var(--muted);text-transform:uppercase;
   letter-spacing:.6px;padding:14px 13px 6px;font-weight:700}
 .main{min-width:0;width:100%;max-width:1060px;margin:0 auto;padding:24px 26px 48px}
 .page{display:none}
 .page.active{display:block;animation:fade .22s ease}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
 .mobilebar{display:none}
 
 .hero{padding:26px 0 8px;text-align:center}
@@ -127,7 +148,22 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 @keyframes sp{to{transform:rotate(360deg)}}
 .hidden{display:none!important}
 
-/* ---------- mobile: hide sidebar, show a scrollable bottom tab bar ---------- */
+/* ---------- desktop: compact icon rail with hover tooltips ---------- */
+@media(min-width:901px){
+  .shell{grid-template-columns:72px minmax(0,1fr)}
+  .side{padding:16px 12px;align-items:stretch;overflow:visible}
+  .side .seplabel{display:none}
+  .side .navlink{justify-content:center;padding:12px 0}
+  .side .navlink .lbl{display:none}
+  .side .navlink.active::before{inset-inline-start:-12px}
+  .side .navlink .tip{display:block;position:absolute;inset-inline-start:calc(100% + 12px);top:50%;
+    transform:translateY(-50%) translateX(-4px);background:var(--panel);border:1px solid var(--line);
+    color:var(--txt);padding:6px 11px;border-radius:9px;font-size:13px;font-weight:600;
+    white-space:nowrap;opacity:0;pointer-events:none;transition:.14s;z-index:70;
+    box-shadow:0 8px 24px rgba(0,0,0,.45)}
+  .side .navlink:hover .tip{opacity:1;transform:translateY(-50%) translateX(0)}
+}
+/* ---------- mobile: burger drawer + bottom quick bar ---------- */
 @media(max-width:900px){
   .shell{grid-template-columns:1fr}
   .side{display:none}
@@ -142,11 +178,25 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
   .mobilebar .navlink .ic{font-size:18px;width:auto}
   .kv{grid-template-columns:1fr}
   .hero{padding:14px 0 4px}
+  .burger{display:flex}
+  .drawerwrap{position:fixed;inset:0;z-index:65;display:none}
+  .drawerwrap.on{display:block}
+  .drawerwrap .scrim{position:absolute;inset:0;background:rgba(0,0,0,.55)}
+  .drawer{position:absolute;inset-block:0;inset-inline-start:0;width:min(84vw,320px);
+    background:var(--bg2);border-inline-end:1px solid var(--line);
+    padding:14px 12px calc(14px + env(safe-area-inset-bottom));overflow:auto;
+    display:flex;flex-direction:column;gap:3px;animation:slidein .2s ease}
+  @keyframes slidein{from{transform:translateX(-14px);opacity:.4}to{transform:none;opacity:1}}
+  .drawer .drawerhead{display:flex;align-items:center;gap:10px;padding:4px 6px 14px}
+  .drawer .drawerhead .x{margin-inline-start:auto;font-size:20px;color:var(--muted);
+    cursor:pointer;padding:2px 8px;border-radius:8px}
+  .drawer .drawerhead .x:hover{background:var(--panel);color:var(--txt)}
 }
 </style>
 </head>
 <body>
 <header><div class="wrap hrow">
+  <button class="burger" id="burger" aria-label="القائمة" data-action="open-drawer">☰</button>
   <div class="logo"><span class="dot"></span>{{ brand }}</div>
   <div class="hspace"></div>
   <span id="provBadge" class="badge demo">…</span>
@@ -156,17 +206,17 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 
 <div class="shell">
   <aside class="side">
-    <div class="navlink" data-goto="home"><span class="ic">🏠</span><span data-i18n="nav_home">الرئيسية</span></div>
+    <div class="navlink" data-goto="home"><span class="ic">🏠</span><span class="lbl" data-i18n="nav_home">الرئيسية</span><span class="tip" data-i18n="nav_home">الرئيسية</span></div>
     <div class="seplabel" data-i18n="nav_group_tools">الأدوات</div>
-    <div class="navlink" data-goto="live"><span class="ic">🔴</span><span data-i18n="nav_live">المسح الحي</span></div>
-    <div class="navlink" data-goto="analyze"><span class="ic">📊</span><span data-i18n="nav_analyze">تحليل الشارت</span></div>
-    <div class="navlink" data-goto="verify"><span class="ic">🔍</span><span data-i18n="nav_verify">التحقق من إشارة</span></div>
-    <div class="navlink" data-goto="advise"><span class="ic">💡</span><span data-i18n="nav_advise">المستشار الذكي</span></div>
-    <div class="navlink" data-goto="zones"><span class="ic">📉</span><span data-i18n="nav_zones">العرض والطلب</span></div>
+    <div class="navlink" data-goto="live"><span class="ic">🔴</span><span class="lbl" data-i18n="nav_live">المسح الحي</span><span class="tip" data-i18n="nav_live">المسح الحي</span></div>
+    <div class="navlink" data-goto="analyze"><span class="ic">📊</span><span class="lbl" data-i18n="nav_analyze">تحليل الشارت</span><span class="tip" data-i18n="nav_analyze">تحليل الشارت</span></div>
+    <div class="navlink" data-goto="verify"><span class="ic">🔍</span><span class="lbl" data-i18n="nav_verify">التحقق من إشارة</span><span class="tip" data-i18n="nav_verify">التحقق من إشارة</span></div>
+    <div class="navlink" data-goto="advise"><span class="ic">💡</span><span class="lbl" data-i18n="nav_advise">المستشار الذكي</span><span class="tip" data-i18n="nav_advise">المستشار الذكي</span></div>
+    <div class="navlink" data-goto="zones"><span class="ic">📉</span><span class="lbl" data-i18n="nav_zones">العرض والطلب</span><span class="tip" data-i18n="nav_zones">العرض والطلب</span></div>
     <div class="seplabel" data-i18n="nav_group_more">المزيد</div>
-    <div class="navlink" data-goto="signals"><span class="ic">📡</span><span data-i18n="nav_signals">الإشارات</span></div>
-    <div class="navlink" data-goto="pricing"><span class="ic">💳</span><span data-i18n="nav_pricing">الأسعار</span></div>
-    <div class="navlink" data-goto="billing"><span class="ic">🧾</span><span data-i18n="nav_billing">الفواتير</span></div>
+    <div class="navlink" data-goto="signals"><span class="ic">📡</span><span class="lbl" data-i18n="nav_signals">الإشارات</span><span class="tip" data-i18n="nav_signals">الإشارات</span></div>
+    <div class="navlink" data-goto="pricing"><span class="ic">💳</span><span class="lbl" data-i18n="nav_pricing">الأسعار</span><span class="tip" data-i18n="nav_pricing">الأسعار</span></div>
+    <div class="navlink" data-goto="billing"><span class="ic">🧾</span><span class="lbl" data-i18n="nav_billing">الفواتير</span><span class="tip" data-i18n="nav_billing">الفواتير</span></div>
   </aside>
 
   <main class="main">
@@ -397,10 +447,28 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
   <div class="navlink" data-goto="analyze"><span class="ic">📊</span><span data-i18n="navm_analyze">تحليل</span></div>
   <div class="navlink" data-goto="verify"><span class="ic">🔍</span><span data-i18n="navm_verify">تحقق</span></div>
   <div class="navlink" data-goto="advise"><span class="ic">💡</span><span data-i18n="navm_advise">مستشار</span></div>
-  <div class="navlink" data-goto="zones"><span class="ic">📉</span><span data-i18n="navm_zones">عرض/طلب</span></div>
-  <div class="navlink" data-goto="signals"><span class="ic">📡</span><span data-i18n="navm_signals">إشارات</span></div>
-  <div class="navlink" data-goto="pricing"><span class="ic">💳</span><span data-i18n="navm_pricing">أسعار</span></div>
-  <div class="navlink" data-goto="billing"><span class="ic">🧾</span><span data-i18n="navm_billing">فواتير</span></div>
+  <div class="navlink" data-action="open-drawer"><span class="ic">☰</span><span data-i18n="navm_more">المزيد</span></div>
+</div>
+
+<div class="drawerwrap" id="drawerwrap">
+  <div class="scrim" data-action="close-drawer"></div>
+  <nav class="drawer">
+    <div class="drawerhead">
+      <div class="logo"><span class="dot"></span>{{ brand }}</div>
+      <span class="x" data-action="close-drawer" aria-label="إغلاق">✕</span>
+    </div>
+    <div class="navlink" data-goto="home"><span class="ic">🏠</span><span class="lbl" data-i18n="nav_home">الرئيسية</span></div>
+    <div class="seplabel" data-i18n="nav_group_tools">الأدوات</div>
+    <div class="navlink" data-goto="live"><span class="ic">🔴</span><span class="lbl" data-i18n="nav_live">المسح الحي</span></div>
+    <div class="navlink" data-goto="analyze"><span class="ic">📊</span><span class="lbl" data-i18n="nav_analyze">تحليل الشارت</span></div>
+    <div class="navlink" data-goto="verify"><span class="ic">🔍</span><span class="lbl" data-i18n="nav_verify">التحقق من إشارة</span></div>
+    <div class="navlink" data-goto="advise"><span class="ic">💡</span><span class="lbl" data-i18n="nav_advise">المستشار الذكي</span></div>
+    <div class="navlink" data-goto="zones"><span class="ic">📉</span><span class="lbl" data-i18n="nav_zones">العرض والطلب</span></div>
+    <div class="seplabel" data-i18n="nav_group_more">المزيد</div>
+    <div class="navlink" data-goto="signals"><span class="ic">📡</span><span class="lbl" data-i18n="nav_signals">الإشارات</span></div>
+    <div class="navlink" data-goto="pricing"><span class="ic">💳</span><span class="lbl" data-i18n="nav_pricing">الأسعار</span></div>
+    <div class="navlink" data-goto="billing"><span class="ic">🧾</span><span class="lbl" data-i18n="nav_billing">الفواتير</span></div>
+  </nav>
 </div>
 
 <div class="modal" id="modal"><div class="box">
@@ -423,7 +491,7 @@ const I18N = {
     nav_advise:"المستشار الذكي",nav_zones:"العرض والطلب",nav_signals:"الإشارات",nav_pricing:"الأسعار",nav_billing:"الفواتير",
     nav_group_tools:"الأدوات",nav_group_more:"المزيد",
     navm_home:"الرئيسية",navm_live:"مسح حي",navm_analyze:"تحليل",navm_verify:"تحقق",navm_advise:"مستشار",
-    navm_zones:"عرض/طلب",navm_signals:"إشارات",navm_pricing:"أسعار",navm_billing:"فواتير",cta_live:"🔴 اقرأ السوق الآن",
+    navm_zones:"عرض/طلب",navm_signals:"إشارات",navm_pricing:"أسعار",navm_billing:"فواتير",navm_more:"المزيد",cta_live:"🔴 اقرأ السوق الآن",
     login:"دخول",logout:"خروج",chip_agents:"12 وكيل ذكاء اصطناعي",
     hero_h1:'حلّل أي شارت في <span>أقل من 30 ثانية</span>',
     hero_p:"ارفع صورة الشارت، تحقّق من أي إشارة لكشف التزوير، واستشر الذكاء الاصطناعي لحماية رأس مالك — مدعوم بـ12 وكيلاً متخصصاً.",
@@ -486,7 +554,7 @@ const I18N = {
     nav_advise:"Smart Advisor",nav_zones:"Supply & Demand",nav_signals:"Signals",nav_pricing:"Pricing",nav_billing:"Billing",
     nav_group_tools:"Tools",nav_group_more:"More",
     navm_home:"Home",navm_live:"Live",navm_analyze:"Analyze",navm_verify:"Verify",navm_advise:"Advisor",
-    navm_zones:"Zones",navm_signals:"Signals",navm_pricing:"Pricing",navm_billing:"Billing",cta_live:"🔴 Read the market now",
+    navm_zones:"Zones",navm_signals:"Signals",navm_pricing:"Pricing",navm_billing:"Billing",navm_more:"More",cta_live:"🔴 Read the market now",
     login:"Login",logout:"Logout",chip_agents:"12 AI agents",
     hero_h1:'Analyze any chart in <span>under 30 seconds</span>',
     hero_p:"Upload your chart for instant analysis, verify any signal to detect fraud, and consult AI to protect your capital — powered by 12 specialized agents.",
@@ -565,15 +633,21 @@ function go(page){
   PAGE = page;
   document.querySelectorAll("[data-page]").forEach(n=>
     n.classList.toggle("active", n.dataset.page===page));
-  document.querySelectorAll("[data-goto]").forEach(n=>
+  // Only real nav links (sidebar / drawer / bottom bar) mirror the active page.
+  document.querySelectorAll(".navlink[data-goto]").forEach(n=>
     n.classList.toggle("active", n.dataset.goto===page));
   if(location.hash !== "#"+page) history.replaceState(null,"","#"+page);
+  closeDrawer();
   window.scrollTo({top:0,behavior:"smooth"});
   if(page==="live" && !window._liveDone) runQuant();
   if(page==="signals") renderSignals();
   if(page==="pricing") renderPlans();
   if(page==="billing") renderBilling();
 }
+/* Mobile drawer (burger / bottom-bar "More"). */
+function openDrawer(){ $("#drawerwrap").classList.add("on"); }
+function closeDrawer(){ const d=$("#drawerwrap"); if(d) d.classList.remove("on"); }
+document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ closeDrawer(); closeModal(); } });
 
 function applyLang(){
   document.documentElement.lang = LANG;
@@ -965,6 +1039,8 @@ document.addEventListener("click", e=>{
   if(a==="cancel-sub"){ e.preventDefault(); cancelSub(); }
   else if(a==="choose-plan"){ e.preventDefault(); choosePlan(el.dataset.plan); }
   else if(a==="open-login"){ e.preventDefault(); openModal(); }
+  else if(a==="open-drawer"){ e.preventDefault(); openDrawer(); }
+  else if(a==="close-drawer"){ e.preventDefault(); closeDrawer(); }
 });
 window.addEventListener("hashchange", ()=>{
   const h = location.hash.replace("#","");

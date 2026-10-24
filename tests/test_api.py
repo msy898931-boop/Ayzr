@@ -60,6 +60,9 @@ def test_index_is_a_page_per_tool(client):
         assert f'data-goto="{p}"' in html, f"{p} not linked from the navs"
     assert 'class="tab"' not in html  # no leftover tab strip
     assert 'class="mobilebar"' in html and 'class="side"' in html
+    # Desktop rail + mobile drawer are the two ways to reach every page.
+    assert 'class="burger"' in html and 'class="drawerwrap"' in html
+    assert 'data-action="open-drawer"' in html
 
 
 def test_plans_are_public(client):
