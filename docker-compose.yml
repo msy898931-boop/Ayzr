@@ -1,0 +1,26 @@
+services:
+  tradli:
+    build: .
+    image: tradli-ai-platform
+    ports:
+      - "8000:8000"
+    environment:
+      # Required: a stable session key. Generate one with:
+      #   python -c "import secrets; print(secrets.token_hex(32))"
+      SECRET_KEY: "${SECRET_KEY:?set SECRET_KEY in .env or the environment}"
+      TRADLI_ENV: production
+      # Behind a reverse proxy, set this to the proxy's address so client IPs
+      # are read from X-Forwarded-For. Leave unset when exposed directly.
+      TRUST_PROXY: "${TRUST_PROXY:-false}"
+      # Model providers (optional; the app runs in DEMO mode without them).
+      GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
+      GROQ_API_KEY: "${GROQ_API_KEY:-}"
+      OPENROUTER_API_KEY: "${OPENROUTER_API_KEY:-}"
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
+    volumes:
+      - tradli-data:/srv/tradli/data
+    restart: unless-stopped
+
+volumes:
+  tradli-data:

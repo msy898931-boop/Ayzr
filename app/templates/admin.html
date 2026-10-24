@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>{{ brand }} — لوحة الإدارة</title>
+<style nonce="{{ csp_nonce }}">
+:root{--bg:#0a0b12;--panel:#171a27;--line:#262a3b;--txt:#eef1f8;--muted:#8b93a8;
+  --accent:#7c5cff;--accent2:#22d3ee;--up:#16c784;--down:#ea3943;--radius:16px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);line-height:1.6;
+  font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:34px 20px 80px}
+header{display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:24px}
+.logo{font-weight:800;display:flex;align-items:center;gap:10px}
+.dot{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2))}
+a{color:var(--accent);text-decoration:none;font-size:13px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));margin-bottom:22px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.card .sub{color:var(--muted);font-size:12.5px}
+.card .val{font-size:26px;font-weight:800;margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+th,td{padding:11px 12px;text-align:start;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-size:12px;font-weight:600}
+.pill{font-size:11px;padding:3px 9px;border-radius:999px;font-weight:700;background:rgba(22,199,132,.15);color:var(--up)}
+.pill.pending{background:rgba(240,185,11,.15);color:#f0b90b}
+.pill.failed,.pill.conflict{background:rgba(234,57,67,.15);color:var(--down)}
+.bar{display:flex;gap:10px;align-items:center;margin-bottom:22px}
+input{flex:1;background:#12141f;border:1px solid var(--line);color:var(--txt);
+  padding:10px 12px;border-radius:10px;font-size:14px;font-family:inherit}
+.btn{background:linear-gradient(135deg,var(--accent),#5b3df0);color:#fff;border:0;
+  padding:10px 18px;border-radius:11px;font-weight:700;font-size:14px;cursor:pointer}
+.hidden{display:none!important}
+.err{color:var(--down);font-size:13px;margin-top:8px}
+h2{font-size:16px;margin:22px 0 10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo"><span class="dot"></span>{{ brand }} · لوحة الإدارة</div>
+    <a href="/">↩ رجوع للمنصة</a>
+  </header>
+
+  <div class="bar">
+    <input id="tok" type="password" placeholder="ADMIN_TOKEN" autocomplete="off"/>
+    <button class="btn" id="go">عرض</button>
+  </div>
+  <div class="err hidden" id="err"></div>
+
+  <div id="out" class="hidden">
+    <div class="grid">
+      <div class="card"><div class="sub">إجمالي المستخدمين</div><div class="val" id="mUsers">—</div></div>
+      <div class="card"><div class="sub">اشتراكات منتهية</div><div class="val" id="mExpired">—</div></div>
+      <div class="card"><div class="sub">إجمالي الطلبات</div><div class="val" id="mOrders">—</div></div>
+      <div class="card"><div class="sub">مدفوعات ناجحة</div><div class="val" id="mPaid">—</div></div>
+      <div class="card"><div class="sub">الإيراد ($)</div><div class="val" id="mRev">—</div></div>
+    </div>
+
+    <h2>الخطط</h2>
+    <div class="grid" id="mPlans"></div>
+
+    <h2>أحدث الطلبات</h2>
+    <table><thead><tr><th>#</th><th>البريد</th><th>الخطة</th>
+      <th>المبلغ</th><th>الحالة</th></tr></thead><tbody id="mRows"></tbody></table>
+  </div>
+</div>
+
+<script nonce="{{ csp_nonce }}">
+const $ = s => document.querySelector(s);
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,
+  c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+async function load(){
+  const tok = $("#tok").value.trim();
+  if(!tok){ return; }
+  localStorage.setItem("adminTok", tok);
+  const err = $("#err");
+  try{
+    const r = await fetch("/api/admin/stats", {headers:{Authorization:"Bearer "+tok}});
+    if(!r.ok){
+      const d = await r.json().catch(()=>({}));
+      err.textContent = d.error==="admin_not_configured"
+        ? "لوحة الإدارة غير مُفعّلة (ADMIN_TOKEN غير مضبوط على السيرفر)."
+        : "رمز غير صحيح.";
+      err.classList.remove("hidden"); $("#out").classList.add("hidden"); return;
+    }
+    err.classList.add("hidden");
+    render(await r.json());
+  }catch(e){
+    err.textContent = "تعذّر الاتصال بالسيرفر."; err.classList.remove("hidden");
+  }
+}
+
+function render(d){
+  $("#out").classList.remove("hidden");
+  const u = d.users||{}, o = d.orders||{};
+  $("#mUsers").textContent = u.total ?? 0;
+  $("#mExpired").textContent = u.expired ?? 0;
+  $("#mOrders").textContent = o.total ?? 0;
+  $("#mPaid").textContent = o.paid ?? 0;
+  $("#mRev").textContent = "$" + Number(o.revenue||0).toFixed(2);
+  $("#mPlans").innerHTML = Object.entries(u.by_plan||{}).map(([k,n])=>
+    `<div class="card"><div class="sub">${esc(k)}</div><div class="val">${esc(n)}</div></div>`).join("")
+    || '<div class="card"><div class="sub">لا بيانات</div></div>';
+  const rows = d.recent_orders||[];
+  $("#mRows").innerHTML = rows.map(x=>`<tr>
+    <td>${esc(x.id)}</td><td>${esc(x.email||"—")}</td><td>${esc(x.plan)}</td>
+    <td>$${Number(x.amount||0).toFixed(2)}</td>
+    <td><span class="pill ${esc(x.status)}">${esc(x.status)}</span></td></tr>`).join("")
+    || '<tr><td colspan="5">لا طلبات بعد.</td></tr>';
+}
+
+$("#go").onclick = load;
+$("#tok").addEventListener("keydown", e=>{ if(e.key==="Enter") load(); });
+const saved = localStorage.getItem("adminTok");
+if(saved){ $("#tok").value = saved; load(); }
+</script>
+</body>
+</html>

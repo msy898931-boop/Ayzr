@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+server.log
+gunicorn.log
+data/
+.env
+.env.*
+!.env.example
+dist/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.db
+.agent_tmp/

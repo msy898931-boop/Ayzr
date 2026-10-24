@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>{{ brand }} — منصة تحليل الأسواق بالذكاء الاصطناعي</title>
+<style nonce="{{ csp_nonce }}">
+:root{
+  --bg:#0a0b12; --bg2:#12141f; --panel:#171a27; --line:#262a3b;
+  --txt:#eef1f8; --muted:#8b93a8; --accent:#7c5cff; --accent2:#22d3ee;
+  --up:#16c784; --down:#ea3943; --wait:#f0b90b; --radius:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(1200px 600px at 70% -10%,#1b1b3a 0%,var(--bg) 55%);
+  color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;
+  line-height:1.6;min-height:100vh}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+header{position:sticky;top:0;z-index:40;backdrop-filter:blur(12px);
+  background:rgba(10,11,18,.72);border-bottom:1px solid var(--line)}
+.hrow{display:flex;align-items:center;gap:18px;padding:14px 0}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:.5px}
+.logo .dot{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2))}
+nav{display:flex;gap:6px;margin-inline-start:auto}
+nav a{padding:8px 13px;border-radius:10px;font-size:14px;color:var(--muted)}
+nav a:hover{color:var(--txt);background:var(--panel)}
+.btn{background:linear-gradient(135deg,var(--accent),#5b3df0);color:#fff;border:0;
+  padding:10px 18px;border-radius:11px;font-weight:700;font-size:14px;cursor:pointer}
+.btn:hover{filter:brightness(1.1)}
+.btn.ghost{background:var(--panel);border:1px solid var(--line);color:var(--txt)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 11px;
+  border-radius:999px;background:var(--panel);border:1px solid var(--line);color:var(--muted)}
+.hero{padding:64px 0 40px;text-align:center}
+.hero h1{font-size:clamp(30px,5vw,52px);font-weight:800;line-height:1.2;margin-bottom:14px}
+.hero h1 span{background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--muted);max-width:640px;margin:0 auto 26px;font-size:16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-top:34px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.stat b{display:block;font-size:26px;font-weight:800}
+.stat small{color:var(--muted);font-size:12.5px}
+section{padding:44px 0}
+h2{font-size:clamp(22px,3vw,32px);margin-bottom:8px;font-weight:800}
+.sub{color:var(--muted);margin-bottom:26px}
+.grid{display:grid;gap:16px}
+.g3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+.card h3{font-size:16px;margin-bottom:8px;display:flex;gap:9px;align-items:center}
+.card p{color:var(--muted);font-size:14px}
+.steps{counter-reset:s;display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+.step::before{counter-increment:s;content:counter(s);display:flex;align-items:center;
+  justify-content:center;width:34px;height:34px;border-radius:10px;margin-bottom:12px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));font-weight:800}
+/* app tool */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:22px}
+.tab{padding:11px 18px;cursor:pointer;font-size:14px;font-weight:600;color:var(--muted);
+  border-bottom:2px solid transparent}
+.tab.active{color:var(--txt);border-bottom-color:var(--accent)}
+.tool{display:grid;gap:22px;grid-template-columns:1fr 1fr}
+@media(max-width:820px){.tool{grid-template-columns:1fr}}
+.drop{border:2px dashed var(--line);border-radius:var(--radius);padding:30px;text-align:center;
+  cursor:pointer;transition:.2s;background:rgba(255,255,255,.015)}
+.drop:hover,.drop.over{border-color:var(--accent);background:rgba(124,92,255,.07)}
+.drop img{max-width:100%;max-height:280px;border-radius:12px;margin-top:12px}
+.field{display:block;margin-bottom:12px}
+.field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px}
+input,select,textarea{width:100%;background:var(--bg2);border:1px solid var(--line);
+  color:var(--txt);padding:10px 12px;border-radius:10px;font-size:14px;font-family:inherit}
+textarea{resize:vertical;min-height:64px}
+.badge{font-size:11px;padding:3px 9px;border-radius:999px;font-weight:700}
+.badge.live{background:rgba(22,199,132,.15);color:var(--up)}
+.badge.demo{background:rgba(240,185,11,.15);color:var(--wait)}
+.verdict{font-size:30px;font-weight:800;margin:6px 0}
+.v-BUY,.v-genuine,.v-up{color:var(--up)}
+.v-SELL,.v-fake,.v-down{color:var(--down)}
+.v-WAIT,.v-suspicious,.v-range{color:var(--wait)}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.kv div{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.kv small{display:block;color:var(--muted);font-size:11.5px}
+.kv b{font-size:15px}
+.agent{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.agent:last-child{border:0}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{padding:11px 12px;text-align:start;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:600;font-size:12px}
+.pill{font-size:11px;padding:3px 9px;border-radius:999px;font-weight:700}
+.pill.BUY{background:rgba(22,199,132,.15);color:var(--up)}
+.pill.SELL{background:rgba(234,57,67,.15);color:var(--down)}
+.cr{display:inline-block;width:60px;height:6px;border-radius:3px;background:var(--line);overflow:hidden;vertical-align:middle}
+.cr i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.price{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px;position:relative}
+.price.pop{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.price .amt{font-size:30px;font-weight:800;margin:6px 0}
+.price ul{list-style:none;margin:16px 0;display:grid;gap:9px;font-size:13.5px;color:var(--muted)}
+.price li::before{content:"✓ ";color:var(--up);font-weight:800}
+.ribbon{position:absolute;top:-11px;inset-inline-start:22px;background:var(--accent);
+  color:#fff;font-size:11px;padding:3px 10px;border-radius:999px;font-weight:700}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;
+  justify-content:center;z-index:60;padding:20px}
+.modal.on{display:flex}
+.modal .box{background:var(--panel);border:1px solid var(--line);border-radius:18px;
+  padding:26px;width:100%;max-width:400px}
+.note{font-size:12.5px;color:var(--muted);background:rgba(124,92,255,.08);
+  border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:16px}
+.err{color:var(--down);font-size:13px;margin-top:8px}
+footer{border-top:1px solid var(--line);padding:34px 0;color:var(--muted);font-size:13px;margin-top:40px}
+.langbtn{background:var(--panel);border:1px solid var(--line);color:var(--txt);
+  padding:9px 13px;border-radius:10px;font-weight:700;font-size:12.5px;cursor:pointer}
+.spin{width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--accent);
+  border-radius:50%;display:inline-block;animation:sp .8s linear infinite;vertical-align:-3px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<header><div class="wrap hrow">
+  <div class="logo"><span class="dot"></span>{{ brand }}</div>
+  <nav>
+    <a href="#app" data-i18n="nav_app">التطبيق</a>
+    <a href="#signals" data-i18n="nav_signals">الإشارات</a>
+    <a href="#pricing" data-i18n="nav_pricing">الأسعار</a>
+    <a href="#billing" data-i18n="nav_billing">الفواتير</a>
+  </nav>
+  <span id="provBadge" class="badge demo">…</span>
+  <button class="langbtn" id="langBtn">EN</button>
+  <button class="btn ghost" id="authBtn" data-i18n="login">دخول</button>
+</div></header>
+
+<main class="wrap">
+  <!-- hero -->
+  <div class="hero">
+    <span class="chip" id="liveChip">● <span data-i18n="chip_agents">12 وكيل ذكاء اصطناعي</span></span>
+    <h1 data-i18n="hero_h1">حلّل أي شارت في <span>أقل من 30 ثانية</span></h1>
+    <p data-i18n="hero_p">ارفع صورة الشارت، تحقّق من أي إشارة لكشف التزوير، واستشر الذكاء الاصطناعي لحماية رأس مالك — مدعوم بـ12 وكيلاً متخصصاً.</p>
+    <button class="btn" data-action="goto" data-hash="app" data-i18n="cta_try">جرّب الآن مجاناً</button>
+    <div class="stats">
+      <div class="stat"><b id="sAgents">12</b><small data-i18n="s_agents">وكلاء متخصصون</small></div>
+      <div class="stat"><b>4</b><small data-i18n="s_feat">أدوات تحليل</small></div>
+      <div class="stat"><b id="sProv">—</b><small data-i18n="s_prov">محرّك التحليل</small></div>
+      <div class="stat"><b>AR/EN</b><small data-i18n="s_lang">عربي / إنجليزي</small></div>
+    </div>
+  </div>
+
+  <!-- features -->
+  <section>
+    <h2 data-i18n="feat_h">ليش تختار {{ brand }}؟</h2>
+    <p class="sub" data-i18n="feat_sub">منصة كاملة تجمع تحليل الذكاء الاصطناعي، الإشارات، والتحقق من الإشارات — بمكان واحد.</p>
+    <div class="grid g3">
+      <div class="card"><h3>🔍 <span data-i18n="f1t">كاشف التزوير</span></h3><p data-i18n="f1p">ارفع أي إشارة مع شارتِها — الذكاء الاصطناعي يكشف إن كانت حقيقية أم مفبركة.</p></div>
+      <div class="card"><h3>📡 <span data-i18n="f2t">مركز الإشارات</span></h3><p data-i18n="f2p">راقب قنوات متعددة بشاشة واحدة، وشوف معدّل النجاح والمصداقية قبل أي توصية.</p></div>
+      <div class="card"><h3>🤖 <span data-i18n="f3t">12 وكيل ذكاء اصطناعي</span></h3><p data-i18n="f3p">يحلّلون السوق من 12 زاوية مختلفة في نفس اللحظة، لكل زاوية تخصصها.</p></div>
+      <div class="card"><h3>🧭 <span data-i18n="f4t">المستشار الذكي</span></h3><p data-i18n="f4p">ارفع شارتك وحدّد صفقتك — نصيحة واضحة: إغلاق، تقليل، تحوّط، أو استمرار.</p></div>
+      <div class="card"><h3>📉 <span data-i18n="f5t">مناطق العرض والطلب</span></h3><p data-i18n="f5p">أقرب مناطق العرض والطلب المهمّة، جاهزة على شارتك.</p></div>
+      <div class="card"><h3>🕒 <span data-i18n="f6t">تحليل الفريمات المتعددة</span></h3><p data-i18n="f6p">ارفع صور من فريمات مختلفة لدقة أعلى — سكالب أو سوينغ.</p></div>
+    </div>
+  </section>
+
+  <!-- how -->
+  <section>
+    <h2 data-i18n="how_h">كيف يعمل؟</h2>
+    <p class="sub" data-i18n="how_sub">ثلاث خطوات بسيطة لتحليل احترافي خلال ثوانٍ.</p>
+    <div class="steps">
+      <div class="step"><h3 data-i18n="h1t">ارفع الشارت</h3><p data-i18n="h1p">خُذ سكرين شوت أو ارفع أي شارت من أي منصة تداول.</p></div>
+      <div class="step"><h3 data-i18n="h2t">12 وكيل يحلّلون</h3><p data-i18n="h2p">خلال أقل من 30 ثانية، 12 وكيلاً يعملون بالتوازي — من حركة السعر إلى أموال المؤسسات.</p></div>
+      <div class="step"><h3 data-i18n="h3t">النتيجة فوراً</h3><p data-i18n="h3p">اتجاه السوق، منطقة الدخول، الستوب، الأهداف، ومستوى الثقة — كل شي جاهز للتنفيذ.</p></div>
+    </div>
+  </section>
+
+  <!-- app -->
+  <section id="app">
+    <h2 data-i18n="app_h">منصة التحليل</h2>
+    <p class="sub" data-i18n="app_sub">اختر الأداة، ارفع الشارت، واحصل على النتيجة.</p>
+    <div class="tabs">
+      <div class="tab active" data-feat="quant" data-i18n="t_quant">🔴 المسح الحي</div>
+      <div class="tab" data-feat="analyze" data-i18n="t_analyze">📊 تحليل الشارت</div>
+      <div class="tab" data-feat="verify" data-i18n="t_verify">🔍 التحقق من إشارة</div>
+      <div class="tab" data-feat="advise" data-i18n="t_advise">💡 المستشار الذكي</div>
+      <div class="tab" data-feat="zones" data-i18n="t_zones">📉 العرض والطلب</div>
+    </div>
+    <div class="tool">
+      <div class="card">
+        <!-- live quant controls -->
+        <div id="quantCtl">
+          <div class="field"><label data-i18n="lbl_symbol_q">الأداة</label>
+            <select id="qSymbol"></select></div>
+          <div class="field"><label data-i18n="lbl_tf">الفريم</label>
+            <select id="qTf"></select></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="field"><label data-i18n="lbl_account">الرصيد ($)</label>
+              <input id="qAccount" type="number" value="200" min="1"/></div>
+            <div class="field"><label data-i18n="lbl_risk">المخاطرة (%)</label>
+              <input id="qRisk" type="number" value="1" step="0.25" min="0.1"/></div>
+          </div>
+          <button class="btn" id="quantBtn" style="width:100%" data-i18n="run_quant">اقرأ السوق الآن</button>
+          <button class="btn ghost" id="scanBtn" style="width:100%;margin-top:8px" data-i18n="run_scan">امسح كل الأسواق</button>
+        </div>
+        <!-- image tools -->
+        <div id="imgCtl" class="hidden">
+          <div class="drop" id="drop">
+            <div id="dropMsg" data-i18n="drop_msg">اسحب صورة الشارت هنا أو اضغط للاختيار</div>
+            <input type="file" id="file" accept="image/*" class="hidden"/>
+          </div>
+          <div class="field" id="fSymbol"><label data-i18n="lbl_symbol">الرمز</label>
+            <input id="symbol" placeholder="XAUUSD / EURUSD / BTCUSD"/></div>
+          <div class="field" id="fTf"><label data-i18n="lbl_tf">الفريم</label>
+            <select id="timeframe"><option>M5</option><option>M15</option><option>H1</option>
+            <option selected>H4</option><option>D1</option></select></div>
+          <div class="field" id="fClaim"><label data-i18n="lbl_claim">نص الإشارة / الادعاء (اختياري)</label>
+            <textarea id="claim" placeholder="Buy XAUUSD 2410, TP 2440, SL 2398"></textarea></div>
+          <div class="field hidden" id="fMode"><label data-i18n="lbl_mode">وضع التحليل</label>
+            <select id="mode"><option value="fast" data-i18n="mode_fast">سريع (12 وكيل بمكالمة واحدة)</option>
+            <option value="full" data-i18n="mode_full">كامل (مكالمة لكل وكيل)</option></select></div>
+          <button class="btn" id="runBtn" style="width:100%" data-i18n="run">حلّل الآن</button>
+        </div>
+        <div id="authHint" class="note hidden" data-i18n="auth_hint">تحتاج تسجيل دخول لاستعمال التحليل. سجّل مجاناً — تحصل على تجربة واحدة لكل أداة.</div>
+      </div>
+      <div class="card" id="result">
+        <p class="sub" style="margin:0" data-i18n="result_ph">النتيجة بتظهر هنا بعد الرفع.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- live quant -->
+  <section id="live">
+    <h2 data-i18n="live_h">المسح الحي للسوق</h2>
+    <p class="sub" data-i18n="live_sub">قراءة مباشرة من بيانات السوق الحقيقية — بدون صورة وبدون مفتاح. الأرقام محسوبة بقواعد شفّافة.</p>
+    <div class="card" style="overflow-x:auto"><table id="scanTable">
+      <thead><tr><th data-i18n="th_sym">الرمز</th><th data-i18n="th_price">السعر</th>
+      <th data-i18n="th_dir">الاتجاه</th><th data-i18n="th_conf">الثقة</th>
+      <th data-i18n="th_entry">دخول</th><th data-i18n="th_sl">ستوب</th>
+      <th data-i18n="th_tp">أهداف</th><th data-i18n="th_lots">الحجم</th>
+      <th data-i18n="th_cost">التكلفة</th></tr></thead>
+      <tbody></tbody></table></div>
+  </section>
+
+  <!-- signals -->
+  <section id="signals">
+    <h2 data-i18n="sig_h">مركز الإشارات</h2>
+    <p class="sub" data-i18n="sig_sub">إشارات مجمّعة من قنوات متعددة مع درجة مصداقية. <b data-i18n="sig_demo">بيانات تجريبية للعرض.</b></p>
+    <div class="card" style="overflow-x:auto"><table id="sigTable">
+      <thead><tr><th data-i18n="th_ch">القناة</th><th data-i18n="th_sym">الرمز</th>
+      <th data-i18n="th_dir">الاتجاه</th><th data-i18n="th_entry">دخول</th>
+      <th data-i18n="th_sl">ستوب</th><th data-i18n="th_tp">أهداف</th>
+      <th data-i18n="th_cr">المصداقية</th><th data-i18n="th_age">العمر</th></tr></thead>
+      <tbody></tbody></table></div>
+  </section>
+
+  <!-- pricing -->
+  <section id="pricing">
+    <h2 data-i18n="pr_h">اختر خطتك</h2>
+    <p class="sub" data-i18n="pr_sub">جرّب مجاناً، وارتقِ وقت ما تحتاج. <b data-i18n="pr_demo">الخطط مدفوعة عبر بوابة دفع موثوقة.</b></p>
+    <label class="sub" style="display:flex;gap:8px;align-items:center;cursor:pointer;margin-bottom:8px">
+      <input type="checkbox" id="autoRenew" checked>
+      <span data-i18n="auto_renew_lbl">جدّد اشتراكي تلقائياً كل 30 يوماً (يمكنك الإلغاء في أي وقت)</span>
+    </label>
+    <div id="subNote" class="sub hidden" style="margin-bottom:12px"></div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))" id="plans"></div>
+  </section>
+
+  <!-- billing -->
+  <section id="billing">
+    <h2 data-i18n="bill_h">الفواتير والاشتراك</h2>
+    <p class="sub" data-i18n="bill_sub">حالة اشتراكك وسجل كل مدفوعاتك.</p>
+    <div id="billBox" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr));margin-bottom:14px"></div>
+    <div class="card" style="overflow-x:auto"><table id="billTable">
+      <thead><tr><th data-i18n="th_date">التاريخ</th><th data-i18n="th_plan">الخطة</th>
+      <th data-i18n="th_kind">النوع</th><th data-i18n="th_amount">المبلغ</th>
+      <th data-i18n="th_status">الحالة</th><th data-i18n="th_ref">المرجع</th></tr></thead>
+      <tbody></tbody></table></div>
+    <p class="sub hidden" id="billEmpty" data-i18n="bill_empty" style="margin-top:12px">لا توجد مدفوعات بعد.</p>
+  </section>
+
+  <footer><div class="wrap">
+    <p>⚠️ <b data-i18n="disc_t">تنبيه:</b> <span data-i18n="disc_p">هذه أداة تعليمية ومساعدة على القرار، وليست نصيحة استثمارية. لا يوجد نظام يضمن الربح. النتائج تعتمد على دقة النموذج وقد تخطئ.</span></p>
+    <p style="margin-top:10px">{{ brand }} · <span id="footProv">—</span>
+       · <a href="#" id="provCheck" style="color:inherit">فحص المزوّدين</a>
+       · <a href="/terms" style="color:inherit" data-i18n="foot_terms">الشروط</a>
+       · <a href="/privacy" style="color:inherit" data-i18n="foot_privacy">الخصوصية</a>
+       · <a href="/api/download" style="color:inherit">⬇️ نسخة محمولة</a>
+       <span id="provList" style="opacity:.85"></span></p>
+  </div></footer>
+</main>
+
+<div class="modal" id="modal"><div class="box">
+  <h3 id="mTitle" data-i18n="m_login">تسجيل الدخول</h3>
+  <div class="field"><label data-i18n="m_email">الإيميل</label><input id="mEmail" type="email"/></div>
+  <div class="field"><label data-i18n="m_pass">كلمة السر</label><input id="mPass" type="password"/></div>
+  <div class="err hidden" id="mErr"></div>
+  <button class="btn" id="mGo" style="width:100%;margin-top:10px" data-i18n="m_login">تسجيل الدخول</button>
+  <p class="note"><a href="#" id="mSwitch" data-i18n="m_switch">ما عندك حساب؟ سجّل جديد</a></p>
+</div></div>
+
+<script nonce="{{ csp_nonce }}">
+const PLANS = {{ plans|tojson }};
+const AGENT_LIST = {{ agents|tojson }};
+const SERVER_PROVIDER = "{{ provider }}";
+const BRAND = "{{ brand }}";
+
+const I18N = {
+  ar:{nav_app:"التطبيق",nav_signals:"الإشارات",nav_pricing:"الأسعار",nav_billing:"الفواتير",login:"دخول",
+    logout:"خروج",chip_agents:"12 وكيل ذكاء اصطناعي",
+    hero_h1:'حلّل أي شارت في <span>أقل من 30 ثانية</span>',
+    hero_p:"ارفع صورة الشارت، تحقّق من أي إشارة لكشف التزوير، واستشر الذكاء الاصطناعي لحماية رأس مالك — مدعوم بـ12 وكيلاً متخصصاً.",
+    cta_try:"جرّب الآن مجاناً",s_agents:"وكلاء متخصصون",s_feat:"أدوات تحليل",s_prov:"محرّك التحليل",s_lang:"عربي / إنجليزي",
+    feat_h:"ليش تختار {brand}؟",feat_sub:"منصة كاملة تجمع تحليل الذكاء الاصطناعي، الإشارات، والتحقق من الإشارات — بمكان واحد.",
+    f1t:"كاشف التزوير",f1p:"ارفع أي إشارة مع شارتِها — الذكاء الاصطناعي يكشف إن كانت حقيقية أم مفبركة.",
+    f2t:"مركز الإشارات",f2p:"راقب قنوات متعددة بشاشة واحدة، وشوف معدّل النجاح والمصداقية قبل أي توصية.",
+    f3t:"12 وكيل ذكاء اصطناعي",f3p:"يحلّلون السوق من 12 زاوية مختلفة في نفس اللحظة.",
+    f4t:"المستشار الذكي",f4p:"ارفع شارتك وحدّد صفقتك — نصيحة واضحة: إغلاق، تقليل، تحوّط، أو استمرار.",
+    f5t:"مناطق العرض والطلب",f5p:"أقرب مناطق العرض والطلب المهمّة، جاهزة على شارتك.",
+    f6t:"تحليل الفريمات المتعددة",f6p:"ارفع صور من فريمات مختلفة لدقة أعلى — سكالب أو سوينغ.",
+    how_h:"كيف يعمل؟",how_sub:"ثلاث خطوات بسيطة لتحليل احترافي خلال ثوانٍ.",
+    h1t:"ارفع الشارت",h1p:"خُذ سكرين شوت أو ارفع أي شارت من أي منصة.",
+    h2t:"12 وكيل يحلّلون",h2p:"خلال أقل من 30 ثانية، 12 وكيلاً يعملون بالتوازي.",
+    h3t:"النتيجة فوراً",h3p:"الاتجاه، الدخول، الستوب، الأهداف، ومستوى الثقة.",
+    app_h:"منصة التحليل",app_sub:"اختر الأداة، ارفع الشارت، واحصل على النتيجة.",
+    t_analyze:"📊 تحليل الشارت",t_verify:"🔍 التحقق من إشارة",t_advise:"💡 المستشار الذكي",t_zones:"📉 العرض والطلب",
+    t_quant:"🔴 المسح الحي",
+    live_h:"المسح الحي للسوق",live_sub:"قراءة مباشرة من بيانات السوق الحقيقية — بدون صورة وبدون مفتاح. الأرقام محسوبة بقواعد شفّافة.",
+    run_quant:"اقرأ السوق الآن",run_scan:"امسح كل الأسواق",lbl_account:"الرصيد ($)",lbl_risk:"المخاطرة (%)",lbl_symbol_q:"الأداة",
+    th_price:"السعر",th_conf:"الثقة",th_lots:"الحجم",th_cost:"التكلفة",
+    q_title:"قراءة حيّة",q_indicators:"المؤشرات",q_reasons:"أسباب القرار",q_met:"تحقّق",q_unmet:"لم يتحقق",
+    q_data:"بيانات حقيقية",q_ai:"شرح الذكاء الاصطناعي",q_lots:"الحجم (لوت)",q_risk_money:"الخطر الفعلي",
+    q_cost_pct:"التكلفة من الخطر",q_invalidation:"ما يُبطل السيناريو",q_explanation:"الشرح",
+    q_support:"الدعم",q_resistance:"المقاومة",q_loading:"جارٍ قراءة السوق…",q_none:"لا توجد أداة محددة.",
+    q_scan_empty:"لا نتائج بعد. اضغط \"امسح كل الأسواق\".",q_wait_note:"لا أفضليّة واضحة — الأفضل الانتظار.",
+    drop_msg:"اسحب صورة الشارت هنا أو اضغط للاختيار",lbl_symbol:"الرمز",lbl_tf:"الفريم",
+    lbl_claim:"نص الإشارة / الادعاء (اختياري)",lbl_mode:"وضع التحليل",
+    mode_fast:"سريع (12 وكيل بمكالمة واحدة)",mode_full:"كامل (مكالمة لكل وكيل)",
+    run:"حلّل الآن",auth_hint:"تحتاج تسجيل دخول لاستعمال التحليل. سجّل مجاناً — تجربة واحدة لكل أداة.",
+    result_ph:"النتيجة بتظهر هنا بعد الرفع.",
+    sig_h:"مركز الإشارات",sig_sub:"إشارات مجمّعة من قنوات متعددة مع درجة مصداقية.",sig_demo:"بيانات تجريبية للعرض.",
+    th_ch:"القناة",th_sym:"الرمز",th_dir:"الاتجاه",th_entry:"دخول",th_sl:"ستوب",th_tp:"أهداف",th_cr:"المصداقية",th_age:"العمر",
+    pr_h:"اختر خطتك",pr_sub:"جرّب مجاناً، وارتقِ وقت ما تحتاج.",pr_demo:"الخطط مدفوعة عبر بوابة دفع موثوقة.",
+    bill_h:"الفواتير والاشتراك",bill_sub:"حالة اشتراكك وسجل كل مدفوعاتك.",
+    bill_plan:"الخطة الحالية",bill_status:"حالة الاشتراك",bill_expires:"ينتهي في",
+    bill_auto_on:"التجديد التلقائي مُفعّل",bill_auto_off:"التجديد التلقائي موقوف",
+    bill_spent:"إجمالي المدفوع",bill_count:"عدد المدفوعات",bill_empty:"لا توجد مدفوعات بعد.",
+    bill_active:"نشط",bill_expired:"منتهٍ",bill_days:"متبقٍ %d يوم",bill_none:"لا يوجد اشتراك",
+    bill_renews:"يتجدّد تلقائياً كل 30 يوماً",bill_cancel_hint:"أوقفت التجديد — يبقى وصولك حتى نهاية المدة.",
+    th_date:"التاريخ",th_plan:"الخطة",th_kind:"النوع",th_amount:"المبلغ",th_status:"الحالة",th_ref:"المرجع",
+    kind_initial:"دفعة أولى",kind_renewal:"تجديد",
+    st_paid:"مدفوع",st_pending:"قيد الانتظار",st_failed:"فشل",st_refunded:"مُسترد",
+    disc_t:"تنبيه:",disc_p:"هذه أداة تعليمية ومساعدة على القرار، وليست نصيحة استثمارية. لا يوجد نظام يضمن الربح. النتائج تعتمد على دقة النموذج وقد تخطئ.",
+    m_login:"تسجيل الدخول",m_register:"إنشاء حساب",m_email:"الإيميل",m_pass:"كلمة السر",
+    m_switch:"ما عندك حساب؟ سجّل جديد",m_switch2:"عندك حساب؟ سجّل دخول",
+    choose:"اختر هذه الخطة",current:"خطتك الحالية",mo:"/شهر",free:"مجاني",auto_renew_lbl:"جدّد اشتراكي تلقائياً كل 30 يوماً (يمكنك الإلغاء في أي وقت)",
+    analyzing:"جارٍ التحليل…",direction:"الاتجاه",confidence:"الثقة",entry:"الدخول",stop:"الستوب",
+    targets:"الأهداف",trend:"الاتجاه العام",summary:"الملخص",agents:"الوكلاء",chief:"المحلّل الرئيسي",
+    agreement:"إجماع",verdict:"الحكم",score:"الدرجة",reasons:"الأسباب",action:"التوصية",
+    supply:"العرض",demand:"الطلب",need_img:"ارفع صورة أولاً.",need_auth:"سجّل دخول أولاً.",quota:"انتهت حصتك لهذه الأداة.",
+    error:"صار خطأ، جرّب مرة تانية.",demo_badge:"تجريبي",live_badge:"حي",
+    zone_note:"ملاحظة",action_hold:"استمرار",action_reduce:"تقليل",action_close:"إغلاق",action_hedge:"تحوّط",
+    foot_terms:"الشروط",foot_privacy:"الخصوصية"},
+  en:{nav_app:"App",nav_signals:"Signals",nav_pricing:"Pricing",nav_billing:"Billing",login:"Login",
+    logout:"Logout",chip_agents:"12 AI agents",
+    hero_h1:'Analyze any chart in <span>under 30 seconds</span>',
+    hero_p:"Upload your chart for instant analysis, verify any signal to detect fraud, and consult AI to protect your capital — powered by 12 specialized agents.",
+    cta_try:"Try it free",s_agents:"Specialized agents",s_feat:"Analysis tools",s_prov:"Analysis engine",s_lang:"Arabic / English",
+    feat_h:"Why choose {brand}?",feat_sub:"A complete platform combining AI analysis, signals and signal verification — in one place.",
+    f1t:"Fraud Detector",f1p:"Submit any signal with its chart — AI reveals whether it is genuine or fake.",
+    f2t:"Signals Hub",f2p:"Monitor many channels on one screen; see success rates and credibility before any call.",
+    f3t:"12 AI Agents",f3p:"They analyze the market from 12 angles simultaneously.",
+    f4t:"Smart Advisor",f4p:"Upload your chart and position — get a clear call: close, reduce, hedge or hold.",
+    f5t:"Supply & Demand",f5p:"The nearest key supply and demand zones, mapped on your chart.",
+    f6t:"Multi-Timeframe",f6p:"Upload several timeframes for higher accuracy — scalping or swing.",
+    how_h:"How it works",how_sub:"Three simple steps to a professional read in seconds.",
+    h1t:"Upload chart",h1p:"Screenshot or upload any chart from any platform.",
+    h2t:"12 agents analyze",h2p:"In under 30 seconds, 12 agents work in parallel.",
+    h3t:"Instant answer",h3p:"Direction, entry, stop, targets and confidence.",
+    app_h:"Analysis platform",app_sub:"Pick a tool, upload the chart, get the result.",
+    t_analyze:"📊 Chart Analysis",t_verify:"🔍 Verify Signal",t_advise:"💡 Smart Advisor",t_zones:"📉 Supply & Demand",
+    t_quant:"🔴 Live Scan",
+    live_h:"Live market scan",live_sub:"A direct read from real market data — no image, no key needed. Numbers are computed by transparent rules.",
+    run_quant:"Read market now",run_scan:"Scan all markets",lbl_account:"Balance ($)",lbl_risk:"Risk (%)",lbl_symbol_q:"Instrument",
+    th_price:"Price",th_conf:"Conf.",th_lots:"Size",th_cost:"Cost",
+    q_title:"Live read",q_indicators:"Indicators",q_reasons:"Why this call",q_met:"met",q_unmet:"not met",
+    q_data:"Real data",q_ai:"AI explanation",q_lots:"Size (lots)",q_risk_money:"Actual risk",
+    q_cost_pct:"Cost vs risk",q_invalidation:"What invalidates it",q_explanation:"Explanation",
+    q_support:"Support",q_resistance:"Resistance",q_loading:"Reading the market…",q_none:"No instrument selected.",
+    q_scan_empty:'No results yet. Press "Scan all markets".',q_wait_note:"No clear edge — best to wait.",
+    drop_msg:"Drag a chart image here or click to choose",lbl_symbol:"Symbol",lbl_tf:"Timeframe",
+    lbl_claim:"Signal text / claim (optional)",lbl_mode:"Analysis mode",
+    mode_fast:"Fast (12 agents, one call)",mode_full:"Full (one call per agent)",
+    run:"Analyze now",auth_hint:"You need an account to use analysis. Sign up free — one try per tool.",
+    result_ph:"The result appears here after upload.",
+    sig_h:"Signals Hub",sig_sub:"Signals aggregated from multiple channels with a credibility score.",sig_demo:"Sample data for demo.",
+    th_ch:"Channel",th_sym:"Symbol",th_dir:"Side",th_entry:"Entry",th_sl:"Stop",th_tp:"Targets",th_cr:"Credibility",th_age:"Age",
+    pr_h:"Choose your plan",pr_sub:"Start free, upgrade when you need.",pr_demo:"Plans are paid via a secure checkout.",
+    bill_h:"Billing & subscription",bill_sub:"Your subscription status and every payment you have made.",
+    bill_plan:"Current plan",bill_status:"Subscription status",bill_expires:"Expires on",
+    bill_auto_on:"Auto-renew is on",bill_auto_off:"Auto-renew is off",
+    bill_spent:"Total paid",bill_count:"Payments",bill_empty:"No payments yet.",
+    bill_active:"Active",bill_expired:"Expired",bill_days:"%d days left",bill_none:"No subscription",
+    bill_renews:"Renews automatically every 30 days",bill_cancel_hint:"Auto-renew off — you keep access until the term ends.",
+    th_date:"Date",th_plan:"Plan",th_kind:"Type",th_amount:"Amount",th_status:"Status",th_ref:"Reference",
+    kind_initial:"First payment",kind_renewal:"Renewal",
+    st_paid:"Paid",st_pending:"Pending",st_failed:"Failed",st_refunded:"Refunded",
+    disc_t:"Note:",disc_p:"An educational decision-support tool, not investment advice. No system guarantees profit. Results depend on model accuracy and can be wrong.",
+    m_login:"Sign in",m_register:"Create account",m_email:"Email",m_pass:"Password",
+    m_switch:"No account? Sign up",m_switch2:"Have an account? Sign in",
+    choose:"Choose this plan",current:"Current plan",mo:"/mo",free:"Free",auto_renew_lbl:"Auto-renew every 30 days (cancel anytime)",
+    analyzing:"Analyzing…",direction:"Direction",confidence:"Confidence",entry:"Entry",stop:"Stop",
+    targets:"Targets",trend:"Trend",summary:"Summary",agents:"Agents",chief:"Chief analyst",
+    agreement:"Agreement",verdict:"Verdict",score:"Score",reasons:"Reasons",action:"Action",
+    supply:"Supply",demand:"Demand",need_img:"Upload an image first.",need_auth:"Please sign in.",quota:"You are out of credits for this tool.",
+    error:"Something went wrong, try again.",demo_badge:"DEMO",live_badge:"LIVE",
+    zone_note:"Note",action_hold:"Hold",action_reduce:"Reduce",action_close:"Close",action_hedge:"Hedge",
+    foot_terms:"Terms",foot_privacy:"Privacy"}
+};
+let LANG = localStorage.getItem("lang") || "ar";
+const t = k => (I18N[LANG][k] ?? I18N.ar[k] ?? k).replace("{brand}", BRAND);
+const $ = s => document.querySelector(s);
+
+/* Escape every string that is interpolated into innerHTML.
+   Model output, signal channels and provider references are all untrusted:
+   without this a crafted chart (or a hostile signal feed) could inject markup
+   and run script in the user's session. Escape at the sink, always. */
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,
+  c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function applyLang(){
+  document.documentElement.lang = LANG;
+  document.documentElement.dir = LANG === "ar" ? "rtl" : "ltr";
+  document.querySelectorAll("[data-i18n]").forEach(el=>{ el.innerHTML = t(el.dataset.i18n); });
+  $("#langBtn").textContent = LANG === "ar" ? "EN" : "ع";
+  renderPlans(); renderSignals(); renderBilling();
+  const u = window._me;
+  $("#authBtn").innerHTML = u ? t("logout") : t("login");
+  localStorage.setItem("lang", LANG);
+}
+$("#langBtn").onclick = ()=>{ LANG = LANG === "ar" ? "en" : "ar"; applyLang(); };
+
+/* ---------- auth ---------- */
+let REGISTER = false;
+function openModal(){ $("#modal").classList.add("on"); $("#mErr").classList.add("hidden"); }
+function closeModal(){ $("#modal").classList.remove("on"); }
+$("#mSwitch").onclick = e=>{ e.preventDefault(); REGISTER=!REGISTER;
+  $("#mTitle").textContent = t(REGISTER?"m_register":"m_login");
+  $("#mGo").textContent = t(REGISTER?"m_register":"m_login");
+  $("#mSwitch").textContent = t(REGISTER?"m_switch2":"m_switch"); };
+$("#modal").onclick = e=>{ if(e.target.id==="modal") closeModal(); };
+$("#authBtn").onclick = async ()=>{
+  if(window._me){ await fetch("/api/auth/logout",{method:"POST"}); window._me=null; refreshMe(); }
+  else openModal();
+};
+$("#mGo").onclick = async ()=>{
+  const email=$("#mEmail").value, password=$("#mPass").value;
+  const url = REGISTER ? "/api/auth/register" : "/api/auth/login";
+  const r = await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({email,password})});
+  const d = await r.json();
+  if(!r.ok){ $("#mErr").textContent = d.error||"error"; $("#mErr").classList.remove("hidden"); return; }
+  closeModal(); await refreshMe();
+};
+async function refreshMe(){
+  const r = await fetch("/api/me"); const d = await r.json();
+  window._me = d.user; window._quotas = d.quotas||{};
+  $("#authBtn").innerHTML = d.user ? t("logout") : t("login");
+  $("#authHint").classList.toggle("hidden", !!d.user);
+  renderPlans();
+  renderBilling();
+}
+
+/* ---------- upload ---------- */
+let IMG = null;
+const drop=$("#drop"), file=$("#file");
+drop.onclick = ()=>file.click();
+file.onchange = ()=>loadFile(file.files[0]);
+["dragover","dragenter"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over");}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over");}));
+drop.addEventListener("drop",e=>{ if(e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]); });
+function loadFile(f){
+  if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{ IMG=rd.result;
+    drop.innerHTML = `<img src="${IMG}"/><div style="margin-top:10px;font-size:12.5px;color:var(--muted)">${f.name}</div>`;
+    drop.appendChild(file); };
+  rd.readAsDataURL(f);
+}
+
+/* ---------- feature tabs ---------- */
+let FEAT="quant";
+document.querySelectorAll(".tab").forEach(tb=>tb.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+  tb.classList.add("active"); FEAT=tb.dataset.feat; syncFields();
+});
+function syncFields(){
+  const isQ = FEAT==="quant";
+  $("#quantCtl").classList.toggle("hidden", !isQ);
+  $("#imgCtl").classList.toggle("hidden", isQ);
+  $("#fSymbol").classList.toggle("hidden", FEAT!=="analyze");
+  $("#fTf").classList.toggle("hidden", FEAT!=="analyze");
+  $("#fMode").classList.toggle("hidden", FEAT!=="analyze");
+  $("#fClaim").classList.toggle("hidden", !(FEAT==="verify"||FEAT==="advise"));
+  $("#claim").placeholder = FEAT==="advise" ? "Long XAUUSD @2410, SL 2398" : "Buy XAUUSD 2410, TP 2440, SL 2398";
+}
+syncFields();
+
+/* ---------- live quant ---------- */
+let MARKETS=null;
+async function loadMarkets(){
+  if(MARKETS) return MARKETS;
+  MARKETS = await (await fetch("/api/markets")).json();
+  $("#qSymbol").innerHTML = MARKETS.symbols.map(s=>`<option value="${s.symbol}">${s.symbol} — ${s.label}</option>`).join("");
+  $("#qTf").innerHTML = MARKETS.timeframes.map(t=>`<option value="${t}" ${t==="H4"?"selected":""}>${t}</option>`).join("");
+  return MARKETS;
+}
+const fmt=(v,d)=>(v===null||v===undefined||isNaN(v))?"—":Number(v).toFixed(d??2);
+function reasonsHtml(reasons){
+  return (reasons||[]).map(r=>`<div class="agent"><span>${r.met?"✅":"⬜"} ${esc(LANG==="ar"?r.ar:r.en)}</span>
+    <span style="color:var(--muted)">${r.met?r.points:0}/${r.max}</span></div>`).join("");
+}
+$("#quantBtn").onclick = ()=>runQuant();
+$("#scanBtn").onclick = ()=>runScan();
+async function runQuant(){
+  await loadMarkets();
+  const sym=$("#qSymbol").value, tf=$("#qTf").value;
+  const acct=$("#qAccount").value||200, risk=$("#qRisk").value||1;
+  setResult(`<p class="sub"><span class="spin"></span> ${t("q_loading")}</p>`);
+  try{
+    const r=await fetch(`/api/quant?symbol=${sym}&timeframe=${tf}&account=${acct}&risk=${risk}`);
+    const R=await r.json();
+    if(!r.ok){ setResult(`<p class="err">${R.detail||R.error||t("error")}</p>`); return; }
+    renderQuant(R);
+  }catch(e){ setResult(`<p class="err">${t("error")}</p>`); }
+}
+function renderQuant(R){
+  const d=R.decision, p=R.plan, sz=R.size, c=R.cost, ind=R.indicators, dg=R.digits;
+  const v=d.verdict;
+  let html=`<div style="display:flex;justify-content:space-between;align-items:center">
+    <span class="sub" style="margin:0">${R.symbol} · ${R.timeframe} · ${R.label}</span>
+    <span class="badge live">${t("q_data")}</span></div>
+    <div class="verdict v-${v}">${v}</div>
+    <div style="color:var(--muted);font-size:13.5px">${t("confidence")}: <b>${d.confidence}%</b>
+      · ${t("price")}: <b>${fmt(R.price,dg)}</b>
+      · ${t("agreement")||""}: <b>${d.score}/${d.max_score}</b></div>`;
+  if(v==="WAIT") html+=`<p class="note">${t("q_wait_note")}</p>`;
+  if(p.entry){
+    html+=`<div class="kv">
+      <div><small>${t("entry")}</small><b>${fmt(p.entry,dg)}</b></div>
+      <div><small>${t("stop")} (${p.stop_pips} ${LANG==="ar"?"نقطة":"pips"})</small><b>${fmt(p.stop,dg)}</b></div>
+      <div><small>${t("targets")}</small><b>${(p.targets||[]).map(x=>fmt(x,dg)).join(" · ")}</b></div>
+      <div><small>R:R</small><b>${p.rr??"—"}</b></div>
+      <div><small>${t("q_lots")}</small><b>${sz.lots??"—"}</b></div>
+      <div><small>${t("q_risk_money")}</small><b>$${fmt(sz.actual_risk)} (${fmt(sz.actual_pct,2)}%)</b></div>
+      <div><small>${t("th_cost")}</small><b>$${fmt(c.money)}</b></div>
+      <div><small>${t("q_cost_pct")}</small><b>${fmt(c.pct_of_risk,1)}%</b></div>
+    </div>`;
+  }
+  if(sz.warning) html+=`<p class="note" style="border-color:var(--down);color:var(--down)">⚠️ ${LANG==="ar"?sz.warning.ar:sz.warning.en}</p>`;
+  html+=`<h3 style="margin:16px 0 4px;font-size:14px">${t("q_reasons")}</h3>${reasonsHtml(d.reasons)}`;
+  html+=`<h3 style="margin:16px 0 4px;font-size:14px">${t("q_indicators")}</h3>
+    <div class="kv">
+      <div><small>RSI14</small><b>${fmt(ind.rsi14,1)}</b></div>
+      <div><small>ADX14</small><b>${fmt(ind.adx14,1)}</b></div>
+      <div><small>ATR%</small><b>${fmt(ind.atr_pct,2)}</b></div>
+      <div><small>MACD hist</small><b>${fmt(ind.macd_hist,4)}</b></div>
+      <div><small>${t("q_support")}</small><b>${(ind.support||[]).map(x=>fmt(x,dg)).join(" · ")||"—"}</b></div>
+      <div><small>${t("q_resistance")}</small><b>${(ind.resistance||[]).map(x=>fmt(x,dg)).join(" · ")||"—"}</b></div>
+    </div>`;
+  if(R.explanation){
+    const e=R.explanation;
+    html+=`<h3 style="margin:16px 0 4px;font-size:14px">🧠 ${t("q_ai")}</h3>
+      <p style="color:var(--muted);font-size:13.5px">${esc(LANG==="ar"?e.summary_ar:e.summary_en)}</p>`;
+    const notes=(LANG==="ar"?e.risk_notes_ar:e.risk_notes_en)||[];
+    if(notes.length) html+=`<ul style="padding-inline-start:18px;color:var(--muted);font-size:13px">${notes.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`;
+    if(LANG==="ar"?e.invalidation_ar:e.invalidation_en){
+      html+=`<p class="sub" style="font-size:12.5px">${t("q_invalidation")}: ${esc(LANG==="ar"?e.invalidation_ar:e.invalidation_en)}</p>`;
+    }
+  }
+  setResult(html);
+}
+async function runScan(){
+  await loadMarkets();
+  const tf=$("#qTf").value, acct=$("#qAccount").value||200, risk=$("#qRisk").value||1;
+  const tb=$("#scanTable tbody");
+  tb.innerHTML=`<tr><td colspan="9"><span class="spin"></span> ${t("q_loading")}</td></tr>`;
+  try{
+    const r=await fetch(`/api/scan?timeframe=${tf}&account=${acct}&risk=${risk}`);
+    const D=await r.json();
+    if(!r.ok){ tb.innerHTML=`<tr><td colspan="9" class="err">${D.detail||t("error")}</td></tr>`; return; }
+    tb.innerHTML=(D.results||[]).map(R=>{
+      const d=R.decision,p=R.plan,sz=R.size,c=R.cost,dg=R.digits;
+      return `<tr><td><b>${R.symbol}</b></td><td>${fmt(R.price,dg)}</td>
+        <td><span class="pill ${d.verdict==="WAIT"?"":d.verdict}" style="${d.verdict==="WAIT"?"background:rgba(240,185,11,.15);color:var(--wait)":""}">${d.verdict}</span></td>
+        <td>${d.confidence}%</td>
+        <td>${p.entry?fmt(p.entry,dg):"—"}</td><td>${p.stop?fmt(p.stop,dg):"—"}</td>
+        <td>${p.targets?p.targets.map(x=>fmt(x,dg)).join(" / "):"—"}</td>
+        <td>${sz.lots??"—"}</td><td>${c.money!=null?"$"+fmt(c.money):"—"}</td></tr>`;
+    }).join("") || `<tr><td colspan="9">${t("q_scan_empty")}</td></tr>`;
+  }catch(e){ tb.innerHTML=`<tr><td colspan="9" class="err">${t("error")}</td></tr>`; }
+}
+
+$("#runBtn").onclick = async ()=>{
+  if(!window._me){ openModal(); return; }
+  if(!IMG){ setResult(`<p class="err">${t("need_img")}</p>`); return; }
+  const btn=$("#runBtn"); btn.disabled=true; btn.innerHTML=`<span class="spin"></span> ${t("analyzing")}`;
+  const payload={image:IMG, symbol:$("#symbol").value, timeframe:$("#timeframe").value,
+    mode:$("#mode").value, claim:$("#claim").value, position:$("#claim").value};
+  try{
+    const r=await fetch("/api/"+FEAT,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)});
+    const d=await r.json();
+    if(r.status===401){ openModal(); setResult(`<p class="err">${t("need_auth")}</p>`); }
+    else if(r.status===402){ setResult(`<p class="err">${t("quota")}</p>`); }
+    else if(!r.ok){ setResult(`<p class="err">${d.detail||t("error")}</p>`); }
+    else { render(FEAT, d.result); refreshMe(); }
+  }catch(e){ setResult(`<p class="err">${t("error")}</p>`); }
+  btn.disabled=false; btn.innerHTML=t("run");
+};
+function setResult(html){ $("#result").innerHTML=html; }
+function badge(live){ return `<span class="badge ${live?"live":"demo"}">${live?t("live_badge"):t("demo_badge")}</span>`; }
+
+function render(feat, R){
+  if(feat==="analyze") return renderAnalyze(R);
+  if(feat==="verify")  return renderVerify(R);
+  if(feat==="advise")  return renderAdvise(R);
+  return renderZones(R);
+}
+function renderAnalyze(R){
+  const dir=R.direction||"WAIT";
+  let html = `<div style="display:flex;justify-content:space-between;align-items:center">
+    <span class="sub" style="margin:0">${t("direction")}</span>${badge(R.live)}</div>
+    <div class="verdict v-${dir}">${dir}</div>
+    <div style="color:var(--muted);font-size:13.5px">${t("confidence")}: <b>${R.confidence??"—"}%</b> · ${t("trend")}: <b>${R.trend||"—"}</b>${R.agreement?` · ${t("agreement")}: <b>${R.agreement.with}/${R.agreement.of}</b>`:""}</div>
+    <div class="kv">
+      <div><small>${t("entry")}</small><b>${R.entry??"—"}</b></div>
+      <div><small>${t("stop")}</small><b>${R.stop??"—"}</b></div>
+      <div><small>${t("targets")}</small><b>${(R.targets||[]).join(" · ")||"—"}</b></div>
+      <div><small>${t("summary")}</small><b style="font-size:13px;font-weight:500">${esc(LANG==="ar"?R.summary_ar:R.summary_en)}</b></div>
+    </div>`;
+  if(R.agents&&R.agents.length){
+    html += `<h3 style="margin:16px 0 4px;font-size:14px">${t("agents")} (${R.agents.length})</h3>`;
+    html += R.agents.map(a=>`<div class="agent"><span>${esc(LANG==="ar"?a.ar:a.en)}</span>
+      <span><span class="v-${esc(a.bias)}">${esc(a.bias)}</span> · ${esc(a.confidence)}%</span></div>`).join("");
+  }
+  setResult(html);
+}
+function renderVerify(R){
+  const v=esc(R.verdict||"suspicious");
+  setResult(`<div style="display:flex;justify-content:space-between;align-items:center">
+    <span class="sub" style="margin:0">${t("verdict")}</span>${badge(R.live)}</div>
+    <div class="verdict v-${v}">${String(v).toUpperCase()}</div>
+    <div style="color:var(--muted)">${t("score")}: <b>${esc(R.score??"—")}%</b></div>
+    <h3 style="margin:14px 0 6px;font-size:14px">${t("reasons")}</h3>
+    <ul style="padding-inline-start:18px;color:var(--muted);font-size:14px">
+    ${((LANG==="ar"?R.reasons_ar:R.reasons_en)||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`);
+}
+function renderAdvise(R){
+  const a=esc(R.action||"hold");
+  setResult(`<div style="display:flex;justify-content:space-between;align-items:center">
+    <span class="sub" style="margin:0">${t("action")}</span>${badge(R.live)}</div>
+    <div class="verdict">${t("action_"+a)}</div>
+    <p style="color:var(--muted)">${esc(LANG==="ar"?R.advice_ar:R.advice_en)}</p>`);
+}
+function renderZones(R){
+  setResult(`<div style="display:flex;justify-content:space-between;align-items:center">
+    <span class="sub" style="margin:0">${t("zones")||"Zones"}</span>${badge(R.live)}</div>
+    <div class="kv">
+      <div><small>${t("supply")}</small><b>${esc((R.supply||[]).join(" · "))||"—"}</b></div>
+      <div><small>${t("demand")}</small><b>${esc((R.demand||[]).join(" · "))||"—"}</b></div>
+    </div>
+    ${R.note_ar||R.note_en?`<p style="margin-top:12px;color:var(--muted);font-size:13.5px">${esc(LANG==="ar"?R.note_ar:R.note_en)}</p>`:""}`);
+}
+
+/* ---------- signals ---------- */
+async function renderSignals(){
+  const tb=$("#sigTable tbody"); if(!tb) return;
+  const r=await fetch("/api/signals"); const d=await r.json();
+  tb.innerHTML=(d.signals||[]).map(s=>`<tr>
+    <td>${esc(s.channel)}</td><td><b>${esc(s.symbol)}</b></td>
+    <td><span class="pill ${esc(s.direction)}">${esc(s.direction)}</span></td>
+    <td>${esc(s.entry??"—")}</td><td>${esc(s.stop??"—")}</td>
+    <td>${esc((s.targets||[]).join(" / "))}</td>
+    <td><span class="cr"><i style="width:${esc(s.credibility)}%"></i></span> ${esc(s.credibility)}%</td>
+    <td>${esc(s.age_min)}${LANG==="ar"?"د":"m"}</td></tr>`).join("");
+}
+
+/* ---------- plans ---------- */
+function subNote(){
+  const el=$("#subNote"); if(!el) return;
+  const u=window._me;
+  if(!u || !u.active || u.days_left==null){ el.classList.add("hidden"); return; }
+  const d=u.days_left, soon=d<=7, plan=esc(u.plan);
+  const renewTxt = u.auto_renew
+    ? (LANG==="ar"?"التجديد التلقائي مُفعّل.":"Auto-renew is on.")
+    : (LANG==="ar"?"التجديد التلقائي متوقف.":"Auto-renew is off.");
+  el.classList.remove("hidden");
+  el.innerHTML = (soon
+    ? (LANG==="ar"
+        ? `⚠️ اشتراكك (${plan}) ينتهي خلال <b>${d}</b> ${d===1?"يوم":"أيام"}. <a href="#pricing">جدّد الآن</a> لتحافظ على حصصك.`
+        : `⚠️ Your ${plan} plan ends in <b>${d}</b> day${d===1?"":"s"}. <a href="#pricing">Renew now</a> to keep your quota.`)
+    : (LANG==="ar"
+        ? `اشتراكك (${plan}) نشط — باقي <b>${d}</b> يوماً.`
+        : `Your ${plan} plan is active — <b>${d}</b> days left.`))
+    + " " + renewTxt
+    + (u.auto_renew ? ` <button class="btn ghost" style="padding:2px 10px;font-size:12px" data-action="cancel-sub">${LANG==="ar"?"إلغاء التجديد":"Cancel renewal"}</button>` : "");
+}
+async function cancelSub(){
+  const msg = LANG==="ar"
+    ? "سيتوقف التجديد التلقائي. تحافظ على اشتراكك حتى نهاية المدة الحالية. متابعة؟"
+    : "Auto-renewal will stop. You keep your plan until the end of the current term. Continue?";
+  if(!confirm(msg)) return;
+  const r=await fetch("/api/subscription/cancel",{method:"POST"});
+  if(r.ok){ await refreshMe(); }
+  else { alert(LANG==="ar"?"تعذّر إلغاء التجديد.":"Could not cancel renewal."); }
+}
+
+/* ---------- billing ---------- */
+function planLabel(k){
+  const p = PLANS[k]; if(!p) return esc(k);
+  return esc(LANG==="ar" ? (p.label_ar||k) : (p.label_en||k));
+}
+function fmtDate(ts){
+  if(!ts) return "—";
+  const d = new Date(ts*1000);
+  return d.toLocaleDateString(LANG==="ar"?"ar":"en-GB",
+    {year:"numeric",month:"short",day:"numeric"});
+}
+function fmtMoney(n){
+  return "$" + Number(n||0).toFixed(2);
+}
+function billCard(label, value, sub, tone){
+  return `<div class="card"><div class="sub">${label}</div>
+    <div style="font-size:20px;font-weight:700;margin:4px 0">${value}</div>
+    <div class="sub" style="color:${tone||"var(--muted)"}">${sub||""}</div></div>`;
+}
+async function renderBilling(){
+  const box=$("#billBox"), tb=$("#billTable tbody"), empty=$("#billEmpty");
+  if(!box) return;
+  if(!window._me){
+    box.innerHTML = billCard(t("bill_status"), t("bill_none"),
+      `<a href="#" data-action="open-login">${t("login")}</a>`);
+    tb.innerHTML=""; empty.classList.add("hidden"); return;
+  }
+  let d;
+  try { d = await (await fetch("/api/billing/history")).json(); }
+  catch(_){ box.innerHTML=""; return; }
+  const s = d.subscription||{}, tot = d.totals||{};
+
+  const statusTxt = s.active
+    ? (s.days_left!=null ? t("bill_days").replace("%d", s.days_left) : t("bill_active"))
+    : t("bill_expired");
+  const expireTxt = s.plan_expires ? fmtDate(s.plan_expires) : "—";
+  const renewTxt = !s.active ? "—"
+    : (s.auto_renew ? t("bill_renews") : t("bill_cancel_hint"));
+
+  box.innerHTML =
+    billCard(t("bill_plan"),
+      s.active ? planLabel(s.plan) : t("bill_none"),
+      s.active ? `<span style="color:var(--ok)">${t("bill_active")}</span>` : t("bill_expired"),
+      s.active ? "var(--ok)" : "var(--muted)")
+    + billCard(t("bill_status"), statusTxt, renewTxt,
+        s.active ? (s.auto_renew?"var(--ok)":"#d99a2b") : "var(--muted)")
+    + billCard(t("bill_expires"), expireTxt,
+        s.auto_renew ? t("bill_auto_on") : t("bill_auto_off"))
+    + billCard(t("bill_spent"), fmtMoney(tot.spent),
+        `${t("bill_count")}: ${tot.count||0}`);
+
+  const rows = d.orders||[];
+  empty.classList.toggle("hidden", rows.length>0);
+  const stKey = {paid:"st_paid",pending:"st_pending",failed:"st_failed",refunded:"st_refunded"};
+  const kdKey = {initial:"kind_initial",renewal:"kind_renewal"};
+  tb.innerHTML = rows.map(o=>`<tr>
+    <td>${fmtDate(o.paid_at||o.created)}</td>
+    <td><b>${planLabel(o.plan)}</b></td>
+    <td>${t(kdKey[o.kind]||"kind_initial")}</td>
+    <td>${fmtMoney(o.amount)}</td>
+    <td>${t(stKey[o.status]||esc(o.status))}</td>
+    <td style="color:var(--muted);font-size:12px">${esc(o.provider_ref||"—")}</td>
+  </tr>`).join("");
+}
+function renderPlans(){
+  const wrap=$("#plans"); if(!wrap) return;
+  subNote();
+  const cur = window._me ? window._me.plan : null;
+  wrap.innerHTML=Object.entries(PLANS).map(([k,p])=>{
+    const isCur = cur===k;
+    const price = p.price ? `$${p.price}<small style="font-size:13px;color:var(--muted)">${t("mo")}</small>` : t("free");
+    const feats = Object.entries(p.limits).map(([f,n])=>{
+      const lbl = {analyze:LANG==="ar"?"تحليل الشارت":"Chart analysis",
+        verify:LANG==="ar"?"التحقق":"Verify",advise:LANG==="ar"?"المستشار":"Advisor",
+        zones:LANG==="ar"?"العرض والطلب":"Zones"}[f];
+      return `<li>${lbl}: ${n}${k==="free"?"":LANG==="ar"?"/يوم":"/day"}</li>`;
+    }).join("");
+    return `<div class="price ${k==="pro"?"pop":""}">${k==="pro"?'<span class="ribbon">⭐ Popular</span>':""}
+      <h3>${esc(LANG==="ar"?p.label_ar:p.label_en)}</h3>
+      <div class="amt">${price}</div>
+      <p style="color:var(--muted);font-size:13px">${esc(LANG==="ar"?p.note_ar:p.note_en)}</p>
+      <ul>${feats}</ul>
+      <button class="btn ${isCur?"ghost":""}" style="width:100%" ${isCur?"disabled":""}
+        data-action="choose-plan" data-plan="${esc(k)}">${isCur?t("current"):t("choose")}</button></div>`;
+  }).join("");
+}
+async function choosePlan(k){
+  if(!window._me){ openModal(); return; }
+  if(k==="free") return;
+  const ar = $("#autoRenew") ? $("#autoRenew").checked : false;
+  const r=await fetch("/api/checkout",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({plan:k, auto_renew:ar})});
+  const d=await r.json().catch(()=>({}));
+  if(r.ok && d.checkout_url){ window.location.href=d.checkout_url; return; }
+  // No real provider configured yet: say so plainly instead of faking an upgrade.
+  alert(LANG==="ar"
+    ? "الدفع غير مُفعّل بعد. راسلنا لتفعيل خطتك — لا يمكن ترقية الخطة بدون دفعة حقيقية."
+    : "Payments are not enabled yet. Contact us to activate your plan — a plan is never granted without a real payment.");
+}
+
+/* ---------- delegated actions (CSP forbids inline handlers) ---------- */
+document.addEventListener("click", e=>{
+  const el = e.target.closest("[data-action]");
+  if(!el) return;
+  const a = el.dataset.action;
+  if(a==="cancel-sub"){ e.preventDefault(); cancelSub(); }
+  else if(a==="choose-plan"){ e.preventDefault(); choosePlan(el.dataset.plan); }
+  else if(a==="open-login"){ e.preventDefault(); openModal(); }
+  else if(a==="goto"){ e.preventDefault(); location.hash = "#" + el.dataset.hash; }
+});
+
+/* ---------- boot ---------- */
+(async function(){
+  applyLang();
+  const h=await (await fetch("/api/health")).json();
+  const lbl = h.live ? h.provider+" · "+h.model : (LANG==="ar"?"وضع تجريبي (بدون مفتاح)":"DEMO mode (no key)");
+  $("#sProv").textContent = h.live ? h.provider : "DEMO";
+  $("#footProv").textContent = lbl;
+  const pb=$("#provBadge"); pb.className="badge "+(h.live?"live":"demo");
+  pb.textContent = h.live?t("live_badge"):t("demo_badge");
+  $("#sAgents").textContent = h.agents;
+  await refreshMe();
+  await loadMarkets();
+  runQuant();
+  // Provider self-check: shows which configured keys actually answer.
+  const pc=$("#provCheck");
+  if(pc) pc.onclick=async (e)=>{
+    e.preventDefault();
+    const box=$("#provList");
+    box.textContent = LANG==="ar"?" …جارٍ الفحص":" …checking";
+    try{
+      const r=await (await fetch("/api/providers")).json();
+      box.textContent = " " + (r.results||[]).map(x=>
+        (x.ok?"✅ ":"⚠️ ")+x.provider).join("  ");
+    }catch(_){ box.textContent=" ⚠️"; }
+  };
+})();
+</script>
+</body>
+</html>

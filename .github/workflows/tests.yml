@@ -1,0 +1,39 @@
+name: tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - name: Run tests
+        run: python -m pytest -q --cov=app --cov-report=term-missing
+      - name: Production config guard (must refuse without SECRET_KEY)
+        run: |
+          if TRADLI_ENV=production python -c "import sys; sys.path.insert(0,'app'); import config; config.secret_key()"; then
+            echo "expected the app to refuse to boot without SECRET_KEY"; exit 1
+          fi
+      - name: Billing guard (no plan may be granted without a payment)
+        run: python -m pytest tests/test_billing.py tests/test_api.py::test_plan_switch_is_disabled -q
+      - name: Money guard (no credit spent on a failed run; quota is atomic)
+        run: python -m pytest tests/test_api.py -q -k "bad_image or refund or atomic"
+      - name: Subscription guard (plans expire and renew correctly)
+        run: python -m pytest tests/test_subscriptions.py -q
+      - name: Recurring guard (every renewal is a verified payment)
+        run: python -m pytest tests/test_recurring.py -q
+      - name: Billing history guard (a user only ever sees their own orders)
+        run: python -m pytest tests/test_billing_history.py -q
+      - name: Spot guard (metals match the broker, indicators unchanged)
+        run: python -m pytest tests/test_spot.py -q

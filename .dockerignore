@@ -1,0 +1,17 @@
+# Keep secrets, local state and test scaffolding out of the image.
+.env
+data/
+dist/
+tests/
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
+.git/
+.gitignore
+server.log
+*.db
+.agent_tmp/
