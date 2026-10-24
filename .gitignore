@@ -9,6 +9,8 @@ data/
 .env.*
 !.env.example
 dist/
+android/build/
+android/keystore/
 .pytest_cache/
 .coverage
 .coverage.*

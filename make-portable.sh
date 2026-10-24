@@ -9,14 +9,21 @@ OUT="dist/Market-AI-Platform.zip"
 STAGE="dist/stage"
 
 echo "→ Cleaning previous build…"
-rm -rf dist
-mkdir -p "$STAGE"
+# Only the zip and staging dir are removed; a previously built APK in dist/ is
+# left alone so running this again does not delete the Android artifact.
+rm -rf "$STAGE" "$OUT"
+mkdir -p "$STAGE" dist
 
 echo "→ Copying project files…"
 # Everything a fresh machine needs to run. .env is intentionally NOT copied.
 cp -r app "$STAGE/"
 cp requirements.txt README.md AGENTS.md run.sh launch.py \
    start-windows.bat start-mac.command start-linux.sh .env.example "$STAGE/"
+
+# The Android shell source ships too, so the app can be rebuilt on the target
+# machine. Keystore and build/ are excluded (a signing key is not portable).
+mkdir -p "$STAGE/android"
+cp -r android/app android/build.sh android/make_icons.py "$STAGE/android/"
 
 echo "→ Zipping…"
 python3 - "$STAGE" "$OUT" <<'PY'

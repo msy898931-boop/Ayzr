@@ -57,6 +57,23 @@ def test_security_headers_present(client):
     assert r.headers["X-Frame-Options"] == "DENY"
 
 
+def test_apk_download_404_when_not_built(client, clean, tmp_path, monkeypatch):
+    monkeypatch.setattr(clean["server"], "DOWNLOAD_DIR", str(tmp_path))
+    r = client.get("/api/app")
+    assert r.status_code == 404
+    assert r.get_json()["error"] == "app not built"
+
+
+def test_apk_download_serves_built_apk(client, clean, tmp_path, monkeypatch):
+    (tmp_path / "AuroraMarkets.apk").write_bytes(b"PK\x03\x04fake-apk")
+    monkeypatch.setattr(clean["server"], "DOWNLOAD_DIR", str(tmp_path))
+    r = client.get("/api/app")
+    assert r.status_code == 200
+    assert r.mimetype == "application/vnd.android.package-archive"
+    assert r.data.startswith(b"PK")
+    r.close()
+
+
 # --------------------------------------------------------------------- auth
 def test_register_and_me(client):
     r = register(client, "a@b.com", "secret123")

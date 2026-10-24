@@ -81,6 +81,10 @@ PORT=12001 python app/server.py
 >
 > **تحميل مباشر:** الحزمة متاحة من التطبيق نفسه على
 > `GET /api/download` (رابط «⬇️ نسخة محمولة» أسفل الصفحة).
+>
+> **تطبيق الأندرويد:** يوجد غلاف أندرويد (WebView) في `android/` يبني ملف
+> `dist/AuroraMarkets.apk`، ومتاح للتنزيل من `GET /api/app`
+> (رابط «📱 تطبيق أندرويد» أسفل الصفحة). التفاصيل في قسم «تطبيق الأندرويد».
 
 
 ### الوضع الحي (نموذج رؤية حقيقي)
@@ -156,6 +160,39 @@ Candlestick · Volatility · Multi-Timeframe · Risk · Sentiment · **Chief**
 
 ---
 
+## تطبيق الأندرويد (APK)
+
+`android/` يحتوي غلافاً (shell) بـ WebView يشغّل نفس واجهة الويب على
+الهاتف — لا إعادة تنفيذ ثانية تخرج عن التزامن. التطبيق يخزّن عنوان
+السيرفر فقط (لا كلمات مرور؛ الجلسة بكوكي على السيرفر).
+
+**البناء** (يحتاج JDK 17+ و Android SDK فيه
+`build-tools;34.0.0` و `platforms;android-34`):
+
+```bash
+export ANDROID_HOME=/path/to/android-sdk
+export AURORA_SERVER=https://your-server.example   # اختياري: يثبّت العنوان
+android/build.sh                                    # ⇒ dist/AuroraMarkets.apk
+```
+
+- بدون `AURORA_SERVER` يطلب التطبيق العنوان عند أول تشغيل ويحفظه.
+- الأيقونة تُولّد بـ `python3 android/make_icons.py`.
+- المفتاح الموقّع `android/keystore/` لا يُنقل مع الحزمة المحمولة أبداً.
+  **احتفظ بنسخة احتياطية منه:** أندرويد يرفض تحديث تطبيق موقّع بمفتاح مختلف،
+  فإذا ضاع المفتاح لن تستطيع الترقية إلا بإزالة التطبيق وتثبيته من جديد.
+
+**التثبيت على الجهاز** (Samsung Galaxy J7 يعمل Android 6–8، والتطبيق
+يستهدف `minSdk 21`):
+
+1. انسخ `AuroraMarkets.apk` إلى الهاتف (USB أو تنزيله من `/api/app`).
+2. الإعدادات → الأمان → فعّل «مصادر غير معروفة» (Unknown sources).
+3. افتح الملف → تثبيت. إن ظهر تحذير Play Protect اختر «تثبيت على أي حال».
+
+> التطبيق موقّع بمفتاح تطوير ذاتي (self-signed)، لذا سيسأل أندرويد عن
+> السماح بالتثبيت من مصدر غير Play. هذا طبيعي للتوزيع الداخلي.
+
+---
+
 ## واجهات API
 
 | الطريقة | المسار | الوصف |
@@ -163,6 +200,7 @@ Candlestick · Volatility · Multi-Timeframe · Risk · Sentiment · **Chief**
 | GET | `/api/health` | حالة المزوّد وعدد الوكلاء |
 | GET | `/api/providers` | فحص المزوّدين المضبوطين (✅/⚠️) |
 | GET | `/api/download` | تنزيل الحزمة المحمولة (zip) |
+| GET | `/api/app` | تنزيل تطبيق الأندرويد (APK) |
 | GET | `/api/plans` | الخطط والحدود |
 | GET | `/api/signals` | مركز الإشارات |
 | GET | `/api/markets` | الأدوات والفريمات المتاحة |

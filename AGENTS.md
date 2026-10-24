@@ -118,7 +118,8 @@ it** (`config.secret_key()` raises SystemExit). `wsgi.py` is the gunicorn entry.
   usable prefix. `llm.extract_json` -> `_salvage` closes dangling strings and
   brackets so a cut-off analysis degrades instead of falling back to DEMO.
 - `GET /api/providers` probes each configured key (first error reported, not
-  the last); `GET /api/download` serves `dist/Market-AI-Platform.zip`.
+  the last); `GET /api/download` serves `dist/Market-AI-Platform.zip` and
+  `GET /api/app` serves `dist/AuroraMarkets.apk`.
 - API keys live in `.env` (gitignored, chmod 600). `server._load_dotenv` reads
   it with `setdefault`, so a real environment variable still wins.
 - `base64.b64decode(validate=False)` *discards* non-alphabet characters instead
@@ -149,6 +150,16 @@ it** (`config.secret_key()` raises SystemExit). `wsgi.py` is the gunicorn entry.
   signals hub is rendered into the page, so an open write endpoint would let a
   stranger put markup on every visitor's screen; `db.add_signal` also bounds
   every field length.
+- The Android shell in `android/` is built with the SDK command-line tools, not
+  Gradle. Two traps bit us: (1) this toolchain's `d8` crashes on ANY class with
+  an `InnerClasses` attribute, so all helper classes are top-level (MainActivity
+  + NavClient + ChromeHost + ConnectClick), never nested; and (2) `javac
+  -source 8` emits a synthetic accessor class for cross-class package-private
+  access, which is exactly such an InnerClasses class -- compile with `-source
+  11 -target 11` instead. Keep helper classes out of `MainActivity`.
+- The APK is self-signed from `android/keystore/` (pass `aurora123`, alias
+  `aurora`). That key is dev-only and must never be checked into git or copied
+  into the portable zip; a real release needs its own key held off-repo.
 
 ## Conventions
 - Quotas: free plan counts lifetime uses (`total` column); paid plans count

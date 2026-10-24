@@ -251,6 +251,19 @@ def api_download():
                      download_name="Market-AI-Platform.zip")
 
 
+@app.route("/api/app")
+def api_app():
+    """Serve the Android APK if it has been built, else explain how to build."""
+    path = os.path.join(DOWNLOAD_DIR, "AuroraMarkets.apk")
+    if not os.path.isfile(path):
+        return jsonify({"ok": False,
+                        "error": "app not built",
+                        "hint": "run android/build.sh on the host"}), 404
+    return send_file(path, as_attachment=True,
+                     download_name="AuroraMarkets.apk",
+                     mimetype="application/vnd.android.package-archive")
+
+
 @app.route("/api/plans")
 def api_plans():
     return jsonify({"plans": db.PLANS,
