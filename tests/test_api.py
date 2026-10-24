@@ -46,6 +46,22 @@ def test_index_renders(client):
     assert b"Tradli" in r.data or b"\xd8\xaa" in r.data  # brand or arabic text
 
 
+def test_index_is_a_page_per_tool(client):
+    """Every tool is its own page, reachable from both navs.
+
+    The old UI crammed all five tools into one tab strip. Pin the split so a
+    refactor cannot quietly collapse it back into a single view.
+    """
+    html = client.get("/").get_data(as_text=True)
+    pages = ["home", "live", "analyze", "verify", "advise", "zones",
+             "signals", "pricing", "billing"]
+    for p in pages:
+        assert f'data-page="{p}"' in html, f"missing page {p}"
+        assert f'data-goto="{p}"' in html, f"{p} not linked from the navs"
+    assert 'class="tab"' not in html  # no leftover tab strip
+    assert 'class="mobilebar"' in html and 'class="side"' in html
+
+
 def test_plans_are_public(client):
     body = client.get("/api/plans").get_json()
     assert set(body["plans"]) == {"free", "basic", "pro", "ultimate"}

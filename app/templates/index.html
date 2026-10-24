@@ -17,13 +17,11 @@ body{background:radial-gradient(1200px 600px at 70% -10%,#1b1b3a 0%,var(--bg) 55
 a{color:inherit;text-decoration:none}
 .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
 header{position:sticky;top:0;z-index:40;backdrop-filter:blur(12px);
-  background:rgba(10,11,18,.72);border-bottom:1px solid var(--line)}
-.hrow{display:flex;align-items:center;gap:18px;padding:14px 0}
+  background:rgba(10,11,18,.82);border-bottom:1px solid var(--line)}
+.hrow{display:flex;align-items:center;gap:12px;padding:12px 0}
 .logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:.5px}
 .logo .dot{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2))}
-nav{display:flex;gap:6px;margin-inline-start:auto}
-nav a{padding:8px 13px;border-radius:10px;font-size:14px;color:var(--muted)}
-nav a:hover{color:var(--txt);background:var(--panel)}
+.hspace{flex:1}
 .btn{background:linear-gradient(135deg,var(--accent),#5b3df0);color:#fff;border:0;
   padding:10px 18px;border-radius:11px;font-weight:700;font-size:14px;cursor:pointer}
 .btn:hover{filter:brightness(1.1)}
@@ -31,33 +29,49 @@ nav a:hover{color:var(--txt);background:var(--panel)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 11px;
   border-radius:999px;background:var(--panel);border:1px solid var(--line);color:var(--muted)}
-.hero{padding:64px 0 40px;text-align:center}
-.hero h1{font-size:clamp(30px,5vw,52px);font-weight:800;line-height:1.2;margin-bottom:14px}
+
+/* ---------- app shell: sidebar (desktop) + bottom bar (mobile) ---------- */
+.shell{display:grid;grid-template-columns:248px minmax(0,1fr);align-items:start}
+.side{position:sticky;top:57px;height:calc(100vh - 57px);overflow:auto;
+  padding:16px 12px;border-inline-end:1px solid var(--line);
+  background:rgba(18,20,31,.45);display:flex;flex-direction:column;gap:3px}
+.navlink{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:11px;
+  color:var(--muted);font-size:14.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+.navlink:hover{background:var(--panel);color:var(--txt)}
+.navlink.active{color:var(--txt);
+  background:linear-gradient(135deg,rgba(124,92,255,.20),rgba(34,211,238,.10))}
+.navlink .ic{font-size:17px;width:22px;text-align:center;flex:none}
+.seplabel{font-size:11px;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.6px;padding:14px 13px 6px;font-weight:700}
+.main{min-width:0;width:100%;max-width:1060px;margin:0 auto;padding:24px 26px 48px}
+.page{display:none}
+.page.active{display:block;animation:fade .22s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.mobilebar{display:none}
+
+.hero{padding:26px 0 8px;text-align:center}
+.hero h1{font-size:clamp(28px,5vw,46px);font-weight:800;line-height:1.2;margin-bottom:14px}
 .hero h1 span{background:linear-gradient(135deg,var(--accent),var(--accent2));
   -webkit-background-clip:text;background-clip:text;color:transparent}
-.hero p{color:var(--muted);max-width:640px;margin:0 auto 26px;font-size:16px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-top:34px}
+.hero p{color:var(--muted);max-width:640px;margin:0 auto 22px;font-size:16px}
+.hero .cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-top:30px}
 .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
 .stat b{display:block;font-size:26px;font-weight:800}
 .stat small{color:var(--muted);font-size:12.5px}
-section{padding:44px 0}
-h2{font-size:clamp(22px,3vw,32px);margin-bottom:8px;font-weight:800}
-.sub{color:var(--muted);margin-bottom:26px}
+section{padding:30px 0}
+h2{font-size:clamp(21px,3vw,29px);margin-bottom:8px;font-weight:800}
+.sub{color:var(--muted);margin-bottom:22px}
 .grid{display:grid;gap:16px}
-.g3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(270px,1fr))}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
 .card h3{font-size:16px;margin-bottom:8px;display:flex;gap:9px;align-items:center}
 .card p{color:var(--muted);font-size:14px}
-.steps{counter-reset:s;display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.steps{counter-reset:s;display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
 .step{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
 .step::before{counter-increment:s;content:counter(s);display:flex;align-items:center;
   justify-content:center;width:34px;height:34px;border-radius:10px;margin-bottom:12px;
   background:linear-gradient(135deg,var(--accent),var(--accent2));font-weight:800}
-/* app tool */
-.tabs{display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:22px}
-.tab{padding:11px 18px;cursor:pointer;font-size:14px;font-weight:600;color:var(--muted);
-  border-bottom:2px solid transparent}
-.tab.active{color:var(--txt);border-bottom-color:var(--accent)}
 .tool{display:grid;gap:22px;grid-template-columns:1fr 1fr}
 @media(max-width:820px){.tool{grid-template-columns:1fr}}
 .drop{border:2px dashed var(--line);border-radius:var(--radius);padding:30px;text-align:center;
@@ -105,84 +119,106 @@ th{color:var(--muted);font-weight:600;font-size:12px}
 .note{font-size:12.5px;color:var(--muted);background:rgba(124,92,255,.08);
   border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:16px}
 .err{color:var(--down);font-size:13px;margin-top:8px}
-footer{border-top:1px solid var(--line);padding:34px 0;color:var(--muted);font-size:13px;margin-top:40px}
+footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-size:13px;margin-top:30px}
 .langbtn{background:var(--panel);border:1px solid var(--line);color:var(--txt);
   padding:9px 13px;border-radius:10px;font-weight:700;font-size:12.5px;cursor:pointer}
 .spin{width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--accent);
   border-radius:50%;display:inline-block;animation:sp .8s linear infinite;vertical-align:-3px}
 @keyframes sp{to{transform:rotate(360deg)}}
 .hidden{display:none!important}
+
+/* ---------- mobile: hide sidebar, show a scrollable bottom tab bar ---------- */
+@media(max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .side{display:none}
+  .main{padding:16px 14px 96px}
+  .mobilebar{display:flex;position:fixed;inset-inline:0;bottom:0;z-index:50;
+    background:rgba(10,11,18,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line);
+    padding:7px 6px calc(7px + env(safe-area-inset-bottom));overflow-x:auto;gap:2px;
+    scrollbar-width:none}
+  .mobilebar::-webkit-scrollbar{display:none}
+  .mobilebar .navlink{flex-direction:column;gap:2px;font-size:9.5px;font-weight:600;
+    padding:6px 4px;min-width:54px;text-align:center;border-radius:11px;line-height:1.15}
+  .mobilebar .navlink .ic{font-size:18px;width:auto}
+  .kv{grid-template-columns:1fr}
+  .hero{padding:14px 0 4px}
+}
 </style>
 </head>
 <body>
 <header><div class="wrap hrow">
   <div class="logo"><span class="dot"></span>{{ brand }}</div>
-  <nav>
-    <a href="#app" data-i18n="nav_app">التطبيق</a>
-    <a href="#signals" data-i18n="nav_signals">الإشارات</a>
-    <a href="#pricing" data-i18n="nav_pricing">الأسعار</a>
-    <a href="#billing" data-i18n="nav_billing">الفواتير</a>
-  </nav>
+  <div class="hspace"></div>
   <span id="provBadge" class="badge demo">…</span>
   <button class="langbtn" id="langBtn">EN</button>
   <button class="btn ghost" id="authBtn" data-i18n="login">دخول</button>
 </div></header>
 
-<main class="wrap">
-  <!-- hero -->
-  <div class="hero">
-    <span class="chip" id="liveChip">● <span data-i18n="chip_agents">12 وكيل ذكاء اصطناعي</span></span>
-    <h1 data-i18n="hero_h1">حلّل أي شارت في <span>أقل من 30 ثانية</span></h1>
-    <p data-i18n="hero_p">ارفع صورة الشارت، تحقّق من أي إشارة لكشف التزوير، واستشر الذكاء الاصطناعي لحماية رأس مالك — مدعوم بـ12 وكيلاً متخصصاً.</p>
-    <button class="btn" data-action="goto" data-hash="app" data-i18n="cta_try">جرّب الآن مجاناً</button>
-    <div class="stats">
-      <div class="stat"><b id="sAgents">12</b><small data-i18n="s_agents">وكلاء متخصصون</small></div>
-      <div class="stat"><b>4</b><small data-i18n="s_feat">أدوات تحليل</small></div>
-      <div class="stat"><b id="sProv">—</b><small data-i18n="s_prov">محرّك التحليل</small></div>
-      <div class="stat"><b>AR/EN</b><small data-i18n="s_lang">عربي / إنجليزي</small></div>
-    </div>
-  </div>
+<div class="shell">
+  <aside class="side">
+    <div class="navlink" data-goto="home"><span class="ic">🏠</span><span data-i18n="nav_home">الرئيسية</span></div>
+    <div class="seplabel" data-i18n="nav_group_tools">الأدوات</div>
+    <div class="navlink" data-goto="live"><span class="ic">🔴</span><span data-i18n="nav_live">المسح الحي</span></div>
+    <div class="navlink" data-goto="analyze"><span class="ic">📊</span><span data-i18n="nav_analyze">تحليل الشارت</span></div>
+    <div class="navlink" data-goto="verify"><span class="ic">🔍</span><span data-i18n="nav_verify">التحقق من إشارة</span></div>
+    <div class="navlink" data-goto="advise"><span class="ic">💡</span><span data-i18n="nav_advise">المستشار الذكي</span></div>
+    <div class="navlink" data-goto="zones"><span class="ic">📉</span><span data-i18n="nav_zones">العرض والطلب</span></div>
+    <div class="seplabel" data-i18n="nav_group_more">المزيد</div>
+    <div class="navlink" data-goto="signals"><span class="ic">📡</span><span data-i18n="nav_signals">الإشارات</span></div>
+    <div class="navlink" data-goto="pricing"><span class="ic">💳</span><span data-i18n="nav_pricing">الأسعار</span></div>
+    <div class="navlink" data-goto="billing"><span class="ic">🧾</span><span data-i18n="nav_billing">الفواتير</span></div>
+  </aside>
 
-  <!-- features -->
-  <section>
-    <h2 data-i18n="feat_h">ليش تختار {{ brand }}؟</h2>
-    <p class="sub" data-i18n="feat_sub">منصة كاملة تجمع تحليل الذكاء الاصطناعي، الإشارات، والتحقق من الإشارات — بمكان واحد.</p>
-    <div class="grid g3">
-      <div class="card"><h3>🔍 <span data-i18n="f1t">كاشف التزوير</span></h3><p data-i18n="f1p">ارفع أي إشارة مع شارتِها — الذكاء الاصطناعي يكشف إن كانت حقيقية أم مفبركة.</p></div>
-      <div class="card"><h3>📡 <span data-i18n="f2t">مركز الإشارات</span></h3><p data-i18n="f2p">راقب قنوات متعددة بشاشة واحدة، وشوف معدّل النجاح والمصداقية قبل أي توصية.</p></div>
-      <div class="card"><h3>🤖 <span data-i18n="f3t">12 وكيل ذكاء اصطناعي</span></h3><p data-i18n="f3p">يحلّلون السوق من 12 زاوية مختلفة في نفس اللحظة، لكل زاوية تخصصها.</p></div>
-      <div class="card"><h3>🧭 <span data-i18n="f4t">المستشار الذكي</span></h3><p data-i18n="f4p">ارفع شارتك وحدّد صفقتك — نصيحة واضحة: إغلاق، تقليل، تحوّط، أو استمرار.</p></div>
-      <div class="card"><h3>📉 <span data-i18n="f5t">مناطق العرض والطلب</span></h3><p data-i18n="f5p">أقرب مناطق العرض والطلب المهمّة، جاهزة على شارتك.</p></div>
-      <div class="card"><h3>🕒 <span data-i18n="f6t">تحليل الفريمات المتعددة</span></h3><p data-i18n="f6p">ارفع صور من فريمات مختلفة لدقة أعلى — سكالب أو سوينغ.</p></div>
-    </div>
-  </section>
+  <main class="main">
 
-  <!-- how -->
-  <section>
-    <h2 data-i18n="how_h">كيف يعمل؟</h2>
-    <p class="sub" data-i18n="how_sub">ثلاث خطوات بسيطة لتحليل احترافي خلال ثوانٍ.</p>
-    <div class="steps">
-      <div class="step"><h3 data-i18n="h1t">ارفع الشارت</h3><p data-i18n="h1p">خُذ سكرين شوت أو ارفع أي شارت من أي منصة تداول.</p></div>
-      <div class="step"><h3 data-i18n="h2t">12 وكيل يحلّلون</h3><p data-i18n="h2p">خلال أقل من 30 ثانية، 12 وكيلاً يعملون بالتوازي — من حركة السعر إلى أموال المؤسسات.</p></div>
-      <div class="step"><h3 data-i18n="h3t">النتيجة فوراً</h3><p data-i18n="h3p">اتجاه السوق، منطقة الدخول، الستوب، الأهداف، ومستوى الثقة — كل شي جاهز للتنفيذ.</p></div>
-    </div>
-  </section>
+    <!-- ======================= HOME ======================= -->
+    <div class="page" data-page="home">
+      <div class="hero">
+        <span class="chip" id="liveChip">● <span data-i18n="chip_agents">12 وكيل ذكاء اصطناعي</span></span>
+        <h1 data-i18n="hero_h1">حلّل أي شارت في <span>أقل من 30 ثانية</span></h1>
+        <p data-i18n="hero_p">ارفع صورة الشارت، تحقّق من أي إشارة لكشف التزوير، واستشر الذكاء الاصطناعي لحماية رأس مالك — مدعوم بـ12 وكيلاً متخصصاً.</p>
+        <div class="cta">
+          <button class="btn" data-goto="analyze" data-i18n="cta_try">جرّب الآن مجاناً</button>
+          <button class="btn ghost" data-goto="live" data-i18n="cta_live">🔴 اقرأ السوق الآن</button>
+        </div>
+        <div class="stats">
+          <div class="stat"><b id="sAgents">12</b><small data-i18n="s_agents">وكلاء متخصصون</small></div>
+          <div class="stat"><b>4</b><small data-i18n="s_feat">أدوات تحليل</small></div>
+          <div class="stat"><b id="sProv">—</b><small data-i18n="s_prov">محرّك التحليل</small></div>
+          <div class="stat"><b>AR/EN</b><small data-i18n="s_lang">عربي / إنجليزي</small></div>
+        </div>
+      </div>
 
-  <!-- app -->
-  <section id="app">
-    <h2 data-i18n="app_h">منصة التحليل</h2>
-    <p class="sub" data-i18n="app_sub">اختر الأداة، ارفع الشارت، واحصل على النتيجة.</p>
-    <div class="tabs">
-      <div class="tab active" data-feat="quant" data-i18n="t_quant">🔴 المسح الحي</div>
-      <div class="tab" data-feat="analyze" data-i18n="t_analyze">📊 تحليل الشارت</div>
-      <div class="tab" data-feat="verify" data-i18n="t_verify">🔍 التحقق من إشارة</div>
-      <div class="tab" data-feat="advise" data-i18n="t_advise">💡 المستشار الذكي</div>
-      <div class="tab" data-feat="zones" data-i18n="t_zones">📉 العرض والطلب</div>
+      <section>
+        <h2 data-i18n="feat_h">ليش تختار {{ brand }}؟</h2>
+        <p class="sub" data-i18n="feat_sub">منصة كاملة تجمع تحليل الذكاء الاصطناعي، الإشارات، والتحقق من الإشارات — بمكان واحد.</p>
+        <div class="grid g3">
+          <div class="card"><h3>🔍 <span data-i18n="f1t">كاشف التزوير</span></h3><p data-i18n="f1p">ارفع أي إشارة مع شارتِها — الذكاء الاصطناعي يكشف إن كانت حقيقية أم مفبركة.</p></div>
+          <div class="card"><h3>📡 <span data-i18n="f2t">مركز الإشارات</span></h3><p data-i18n="f2p">راقب قنوات متعددة بشاشة واحدة، وشوف معدّل النجاح والمصداقية قبل أي توصية.</p></div>
+          <div class="card"><h3>🤖 <span data-i18n="f3t">12 وكيل ذكاء اصطناعي</span></h3><p data-i18n="f3p">يحلّلون السوق من 12 زاوية مختلفة في نفس اللحظة، لكل زاوية تخصصها.</p></div>
+          <div class="card"><h3>🧭 <span data-i18n="f4t">المستشار الذكي</span></h3><p data-i18n="f4p">ارفع شارتك وحدّد صفقتك — نصيحة واضحة: إغلاق، تقليل، تحوّط، أو استمرار.</p></div>
+          <div class="card"><h3>📉 <span data-i18n="f5t">مناطق العرض والطلب</span></h3><p data-i18n="f5p">أقرب مناطق العرض والطلب المهمّة، جاهزة على شارتك.</p></div>
+          <div class="card"><h3>🕒 <span data-i18n="f6t">تحليل الفريمات المتعددة</span></h3><p data-i18n="f6p">ارفع صور من فريمات مختلفة لدقة أعلى — سكالب أو سوينغ.</p></div>
+        </div>
+      </section>
+
+      <section>
+        <h2 data-i18n="how_h">كيف يعمل؟</h2>
+        <p class="sub" data-i18n="how_sub">ثلاث خطوات بسيطة لتحليل احترافي خلال ثوانٍ.</p>
+        <div class="steps">
+          <div class="step"><h3 data-i18n="h1t">ارفع الشارت</h3><p data-i18n="h1p">خُذ سكرين شوت أو ارفع أي شارت من أي منصة تداول.</p></div>
+          <div class="step"><h3 data-i18n="h2t">12 وكيل يحلّلون</h3><p data-i18n="h2p">خلال أقل من 30 ثانية، 12 وكيلاً يعملون بالتوازي — من حركة السعر إلى أموال المؤسسات.</p></div>
+          <div class="step"><h3 data-i18n="h3t">النتيجة فوراً</h3><p data-i18n="h3p">اتجاه السوق، منطقة الدخول، الستوب، الأهداف، ومستوى الثقة — كل شي جاهز للتنفيذ.</p></div>
+        </div>
+      </section>
     </div>
-    <div class="tool">
-      <div class="card">
-        <!-- live quant controls -->
-        <div id="quantCtl">
+
+    <!-- ======================= LIVE SCAN ======================= -->
+    <div class="page" data-page="live">
+      <h2 data-i18n="live_h">المسح الحي للسوق</h2>
+      <p class="sub" data-i18n="live_sub">قراءة مباشرة من بيانات السوق الحقيقية — بدون صورة وبدون مفتاح. الأرقام محسوبة بقواعد شفّافة.</p>
+      <div class="tool">
+        <div class="card">
           <div class="field"><label data-i18n="lbl_symbol_q">الأداة</label>
             <select id="qSymbol"></select></div>
           <div class="field"><label data-i18n="lbl_tf">الفريم</label>
@@ -196,93 +232,176 @@ footer{border-top:1px solid var(--line);padding:34px 0;color:var(--muted);font-s
           <button class="btn" id="quantBtn" style="width:100%" data-i18n="run_quant">اقرأ السوق الآن</button>
           <button class="btn ghost" id="scanBtn" style="width:100%;margin-top:8px" data-i18n="run_scan">امسح كل الأسواق</button>
         </div>
-        <!-- image tools -->
-        <div id="imgCtl" class="hidden">
-          <div class="drop" id="drop">
-            <div id="dropMsg" data-i18n="drop_msg">اسحب صورة الشارت هنا أو اضغط للاختيار</div>
-            <input type="file" id="file" accept="image/*" class="hidden"/>
-          </div>
-          <div class="field" id="fSymbol"><label data-i18n="lbl_symbol">الرمز</label>
-            <input id="symbol" placeholder="XAUUSD / EURUSD / BTCUSD"/></div>
-          <div class="field" id="fTf"><label data-i18n="lbl_tf">الفريم</label>
-            <select id="timeframe"><option>M5</option><option>M15</option><option>H1</option>
-            <option selected>H4</option><option>D1</option></select></div>
-          <div class="field" id="fClaim"><label data-i18n="lbl_claim">نص الإشارة / الادعاء (اختياري)</label>
-            <textarea id="claim" placeholder="Buy XAUUSD 2410, TP 2440, SL 2398"></textarea></div>
-          <div class="field hidden" id="fMode"><label data-i18n="lbl_mode">وضع التحليل</label>
-            <select id="mode"><option value="fast" data-i18n="mode_fast">سريع (12 وكيل بمكالمة واحدة)</option>
-            <option value="full" data-i18n="mode_full">كامل (مكالمة لكل وكيل)</option></select></div>
-          <button class="btn" id="runBtn" style="width:100%" data-i18n="run">حلّل الآن</button>
+        <div class="card" id="resultLive">
+          <p class="sub" style="margin:0" data-i18n="result_ph">النتيجة بتظهر هنا بعد الرفع.</p>
         </div>
-        <div id="authHint" class="note hidden" data-i18n="auth_hint">تحتاج تسجيل دخول لاستعمال التحليل. سجّل مجاناً — تحصل على تجربة واحدة لكل أداة.</div>
       </div>
-      <div class="card" id="result">
-        <p class="sub" style="margin:0" data-i18n="result_ph">النتيجة بتظهر هنا بعد الرفع.</p>
+      <div class="card" style="overflow-x:auto;margin-top:22px"><table id="scanTable">
+        <thead><tr><th data-i18n="th_sym">الرمز</th><th data-i18n="th_price">السعر</th>
+        <th data-i18n="th_dir">الاتجاه</th><th data-i18n="th_conf">الثقة</th>
+        <th data-i18n="th_entry">دخول</th><th data-i18n="th_sl">ستوب</th>
+        <th data-i18n="th_tp">أهداف</th><th data-i18n="th_lots">الحجم</th>
+        <th data-i18n="th_cost">التكلفة</th></tr></thead>
+        <tbody></tbody></table></div>
+    </div>
+
+    <!-- ======================= ANALYZE ======================= -->
+    <div class="page" data-page="analyze">
+      <h2 data-i18n="app_h">تحليل الشارت</h2>
+      <p class="sub" data-i18n="an_sub">ارفع صورة الشارت ودع 12 وكيلاً يقرأون الاتجاه، الدخول، الستوب والأهداف.</p>
+      <div class="tool">
+        <div class="card toolpane" data-tool="analyze">
+          <div class="drop"><div class="dropmsg" data-i18n="drop_msg">اسحب صورة الشارت هنا أو اضغط للاختيار</div>
+            <input type="file" accept="image/*" class="hidden filein"/></div>
+          <div class="field"><label data-i18n="lbl_symbol">الرمز</label>
+            <input class="insym" placeholder="XAUUSD / EURUSD / BTCUSD"/></div>
+          <div class="field"><label data-i18n="lbl_tf">الفريم</label>
+            <select class="intf"><option>M5</option><option>M15</option><option>H1</option>
+            <option selected>H4</option><option>D1</option></select></div>
+          <div class="field"><label data-i18n="lbl_mode">وضع التحليل</label>
+            <select class="inmode"><option value="fast" data-i18n="mode_fast">سريع (12 وكيل بمكالمة واحدة)</option>
+            <option value="full" data-i18n="mode_full">كامل (مكالمة لكل وكيل)</option></select></div>
+          <button class="btn runbtn" style="width:100%" data-i18n="run">حلّل الآن</button>
+          <div class="note authhint hidden" data-i18n="auth_hint">تحتاج تسجيل دخول لاستعمال التحليل. سجّل مجاناً — تحصل على تجربة واحدة لكل أداة.</div>
+        </div>
+        <div class="card result" data-result="analyze">
+          <p class="sub" style="margin:0" data-i18n="result_ph">النتيجة بتظهر هنا بعد الرفع.</p>
+        </div>
       </div>
     </div>
-  </section>
 
-  <!-- live quant -->
-  <section id="live">
-    <h2 data-i18n="live_h">المسح الحي للسوق</h2>
-    <p class="sub" data-i18n="live_sub">قراءة مباشرة من بيانات السوق الحقيقية — بدون صورة وبدون مفتاح. الأرقام محسوبة بقواعد شفّافة.</p>
-    <div class="card" style="overflow-x:auto"><table id="scanTable">
-      <thead><tr><th data-i18n="th_sym">الرمز</th><th data-i18n="th_price">السعر</th>
-      <th data-i18n="th_dir">الاتجاه</th><th data-i18n="th_conf">الثقة</th>
-      <th data-i18n="th_entry">دخول</th><th data-i18n="th_sl">ستوب</th>
-      <th data-i18n="th_tp">أهداف</th><th data-i18n="th_lots">الحجم</th>
-      <th data-i18n="th_cost">التكلفة</th></tr></thead>
-      <tbody></tbody></table></div>
-  </section>
+    <!-- ======================= VERIFY ======================= -->
+    <div class="page" data-page="verify">
+      <h2 data-i18n="verify_h">التحقق من إشارة</h2>
+      <p class="sub" data-i18n="verify_sub">ارفع الإشارة مع شارتِها — الذكاء الاصطناعي يكشف إن كانت حقيقية أم مفبركة.</p>
+      <div class="tool">
+        <div class="card toolpane" data-tool="verify">
+          <div class="drop"><div class="dropmsg" data-i18n="drop_msg">اسحب صورة الشارت هنا أو اضغط للاختيار</div>
+            <input type="file" accept="image/*" class="hidden filein"/></div>
+          <div class="field"><label data-i18n="lbl_symbol">الرمز</label>
+            <input class="insym" placeholder="XAUUSD / EURUSD / BTCUSD"/></div>
+          <div class="field"><label data-i18n="lbl_tf">الفريم</label>
+            <select class="intf"><option>M5</option><option>M15</option><option>H1</option>
+            <option selected>H4</option><option>D1</option></select></div>
+          <div class="field"><label data-i18n="lbl_claim">نص الإشارة / الادعاء (اختياري)</label>
+            <textarea class="inclaim" placeholder="Buy XAUUSD 2410, TP 2440, SL 2398"></textarea></div>
+          <button class="btn runbtn" style="width:100%" data-i18n="run">حلّل الآن</button>
+          <div class="note authhint hidden" data-i18n="auth_hint">تحتاج تسجيل دخول لاستعمال التحليل. سجّل مجاناً — تحصل على تجربة واحدة لكل أداة.</div>
+        </div>
+        <div class="card result" data-result="verify">
+          <p class="sub" style="margin:0" data-i18n="result_ph">النتيجة بتظهر هنا بعد الرفع.</p>
+        </div>
+      </div>
+    </div>
 
-  <!-- signals -->
-  <section id="signals">
-    <h2 data-i18n="sig_h">مركز الإشارات</h2>
-    <p class="sub" data-i18n="sig_sub">إشارات مجمّعة من قنوات متعددة مع درجة مصداقية. <b data-i18n="sig_demo">بيانات تجريبية للعرض.</b></p>
-    <div class="card" style="overflow-x:auto"><table id="sigTable">
-      <thead><tr><th data-i18n="th_ch">القناة</th><th data-i18n="th_sym">الرمز</th>
-      <th data-i18n="th_dir">الاتجاه</th><th data-i18n="th_entry">دخول</th>
-      <th data-i18n="th_sl">ستوب</th><th data-i18n="th_tp">أهداف</th>
-      <th data-i18n="th_cr">المصداقية</th><th data-i18n="th_age">العمر</th></tr></thead>
-      <tbody></tbody></table></div>
-  </section>
+    <!-- ======================= ADVISE ======================= -->
+    <div class="page" data-page="advise">
+      <h2 data-i18n="advise_h">المستشار الذكي</h2>
+      <p class="sub" data-i18n="advise_sub">ارفع شارتك وحدّد صفقتك — نصيحة واضحة: إغلاق، تقليل، تحوّط، أو استمرار.</p>
+      <div class="tool">
+        <div class="card toolpane" data-tool="advise">
+          <div class="drop"><div class="dropmsg" data-i18n="drop_msg">اسحب صورة الشارت هنا أو اضغط للاختيار</div>
+            <input type="file" accept="image/*" class="hidden filein"/></div>
+          <div class="field"><label data-i18n="lbl_symbol">الرمز</label>
+            <input class="insym" placeholder="XAUUSD / EURUSD / BTCUSD"/></div>
+          <div class="field"><label data-i18n="lbl_tf">الفريم</label>
+            <select class="intf"><option>M5</option><option>M15</option><option>H1</option>
+            <option selected>H4</option><option>D1</option></select></div>
+          <div class="field"><label data-i18n="lbl_position">تفاصيل صفقتك (اختياري)</label>
+            <textarea class="inclaim" placeholder="Long XAUUSD @2410, SL 2398"></textarea></div>
+          <button class="btn runbtn" style="width:100%" data-i18n="run">حلّل الآن</button>
+          <div class="note authhint hidden" data-i18n="auth_hint">تحتاج تسجيل دخول لاستعمال التحليل. سجّل مجاناً — تحصل على تجربة واحدة لكل أداة.</div>
+        </div>
+        <div class="card result" data-result="advise">
+          <p class="sub" style="margin:0" data-i18n="result_ph">النتيجة بتظهر هنا بعد الرفع.</p>
+        </div>
+      </div>
+    </div>
 
-  <!-- pricing -->
-  <section id="pricing">
-    <h2 data-i18n="pr_h">اختر خطتك</h2>
-    <p class="sub" data-i18n="pr_sub">جرّب مجاناً، وارتقِ وقت ما تحتاج. <b data-i18n="pr_demo">الخطط مدفوعة عبر بوابة دفع موثوقة.</b></p>
-    <label class="sub" style="display:flex;gap:8px;align-items:center;cursor:pointer;margin-bottom:8px">
-      <input type="checkbox" id="autoRenew" checked>
-      <span data-i18n="auto_renew_lbl">جدّد اشتراكي تلقائياً كل 30 يوماً (يمكنك الإلغاء في أي وقت)</span>
-    </label>
-    <div id="subNote" class="sub hidden" style="margin-bottom:12px"></div>
-    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))" id="plans"></div>
-  </section>
+    <!-- ======================= ZONES ======================= -->
+    <div class="page" data-page="zones">
+      <h2 data-i18n="zones_h">مناطق العرض والطلب</h2>
+      <p class="sub" data-i18n="zones_sub">أقرب مناطق العرض والطلب المهمّة، جاهزة على شارتك.</p>
+      <div class="tool">
+        <div class="card toolpane" data-tool="zones">
+          <div class="drop"><div class="dropmsg" data-i18n="drop_msg">اسحب صورة الشارت هنا أو اضغط للاختيار</div>
+            <input type="file" accept="image/*" class="hidden filein"/></div>
+          <div class="field"><label data-i18n="lbl_symbol">الرمز</label>
+            <input class="insym" placeholder="XAUUSD / EURUSD / BTCUSD"/></div>
+          <div class="field"><label data-i18n="lbl_tf">الفريم</label>
+            <select class="intf"><option>M5</option><option>M15</option><option>H1</option>
+            <option selected>H4</option><option>D1</option></select></div>
+          <button class="btn runbtn" style="width:100%" data-i18n="run">حلّل الآن</button>
+          <div class="note authhint hidden" data-i18n="auth_hint">تحتاج تسجيل دخول لاستعمال التحليل. سجّل مجاناً — تحصل على تجربة واحدة لكل أداة.</div>
+        </div>
+        <div class="card result" data-result="zones">
+          <p class="sub" style="margin:0" data-i18n="result_ph">النتيجة بتظهر هنا بعد الرفع.</p>
+        </div>
+      </div>
+    </div>
 
-  <!-- billing -->
-  <section id="billing">
-    <h2 data-i18n="bill_h">الفواتير والاشتراك</h2>
-    <p class="sub" data-i18n="bill_sub">حالة اشتراكك وسجل كل مدفوعاتك.</p>
-    <div id="billBox" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr));margin-bottom:14px"></div>
-    <div class="card" style="overflow-x:auto"><table id="billTable">
-      <thead><tr><th data-i18n="th_date">التاريخ</th><th data-i18n="th_plan">الخطة</th>
-      <th data-i18n="th_kind">النوع</th><th data-i18n="th_amount">المبلغ</th>
-      <th data-i18n="th_status">الحالة</th><th data-i18n="th_ref">المرجع</th></tr></thead>
-      <tbody></tbody></table></div>
-    <p class="sub hidden" id="billEmpty" data-i18n="bill_empty" style="margin-top:12px">لا توجد مدفوعات بعد.</p>
-  </section>
+    <!-- ======================= SIGNALS ======================= -->
+    <div class="page" data-page="signals">
+      <h2 data-i18n="sig_h">مركز الإشارات</h2>
+      <p class="sub" data-i18n="sig_sub">إشارات مجمّعة من قنوات متعددة مع درجة مصداقية. <b data-i18n="sig_demo">بيانات تجريبية للعرض.</b></p>
+      <div class="card" style="overflow-x:auto"><table id="sigTable">
+        <thead><tr><th data-i18n="th_ch">القناة</th><th data-i18n="th_sym">الرمز</th>
+        <th data-i18n="th_dir">الاتجاه</th><th data-i18n="th_entry">دخول</th>
+        <th data-i18n="th_sl">ستوب</th><th data-i18n="th_tp">أهداف</th>
+        <th data-i18n="th_cr">المصداقية</th><th data-i18n="th_age">العمر</th></tr></thead>
+        <tbody></tbody></table></div>
+    </div>
 
-  <footer><div class="wrap">
-    <p>⚠️ <b data-i18n="disc_t">تنبيه:</b> <span data-i18n="disc_p">هذه أداة تعليمية ومساعدة على القرار، وليست نصيحة استثمارية. لا يوجد نظام يضمن الربح. النتائج تعتمد على دقة النموذج وقد تخطئ.</span></p>
-    <p style="margin-top:10px">{{ brand }} · <span id="footProv">—</span>
-       · <a href="#" id="provCheck" style="color:inherit">فحص المزوّدين</a>
-       · <a href="/terms" style="color:inherit" data-i18n="foot_terms">الشروط</a>
-       · <a href="/privacy" style="color:inherit" data-i18n="foot_privacy">الخصوصية</a>
-       · <a href="/api/download" style="color:inherit">⬇️ نسخة محمولة</a>
-       · <a href="/api/app" style="color:inherit">📱 تطبيق أندرويد (APK)</a>
-       <span id="provList" style="opacity:.85"></span></p>
-  </div></footer>
-</main>
+    <!-- ======================= PRICING ======================= -->
+    <div class="page" data-page="pricing">
+      <h2 data-i18n="pr_h">اختر خطتك</h2>
+      <p class="sub" data-i18n="pr_sub">جرّب مجاناً، وارتقِ وقت ما تحتاج. <b data-i18n="pr_demo">الخطط مدفوعة عبر بوابة دفع موثوقة.</b></p>
+      <label class="sub" style="display:flex;gap:8px;align-items:center;cursor:pointer;margin-bottom:8px">
+        <input type="checkbox" id="autoRenew" checked>
+        <span data-i18n="auto_renew_lbl">جدّد اشتراكي تلقائياً كل 30 يوماً (يمكنك الإلغاء في أي وقت)</span>
+      </label>
+      <div id="subNote" class="sub hidden" style="margin-bottom:12px"></div>
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))" id="plans"></div>
+    </div>
+
+    <!-- ======================= BILLING ======================= -->
+    <div class="page" data-page="billing">
+      <h2 data-i18n="bill_h">الفواتير والاشتراك</h2>
+      <p class="sub" data-i18n="bill_sub">حالة اشتراكك وسجل كل مدفوعاتك.</p>
+      <div id="billBox" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr));margin-bottom:14px"></div>
+      <div class="card" style="overflow-x:auto"><table id="billTable">
+        <thead><tr><th data-i18n="th_date">التاريخ</th><th data-i18n="th_plan">الخطة</th>
+        <th data-i18n="th_kind">النوع</th><th data-i18n="th_amount">المبلغ</th>
+        <th data-i18n="th_status">الحالة</th><th data-i18n="th_ref">المرجع</th></tr></thead>
+        <tbody></tbody></table></div>
+      <p class="sub hidden" id="billEmpty" data-i18n="bill_empty" style="margin-top:12px">لا توجد مدفوعات بعد.</p>
+    </div>
+
+    <footer>
+      <p>⚠️ <b data-i18n="disc_t">تنبيه:</b> <span data-i18n="disc_p">هذه أداة تعليمية ومساعدة على القرار، وليست نصيحة استثمارية. لا يوجد نظام يضمن الربح. النتائج تعتمد على دقة النموذج وقد تخطئ.</span></p>
+      <p style="margin-top:10px">{{ brand }} · <span id="footProv">—</span>
+         · <a href="#" id="provCheck" style="color:inherit">فحص المزوّدين</a>
+         · <a href="/terms" style="color:inherit" data-i18n="foot_terms">الشروط</a>
+         · <a href="/privacy" style="color:inherit" data-i18n="foot_privacy">الخصوصية</a>
+         · <a href="/api/download" style="color:inherit">⬇️ نسخة محمولة</a>
+         · <a href="/api/app" style="color:inherit">📱 تطبيق أندرويد (APK)</a>
+         <span id="provList" style="opacity:.85"></span></p>
+    </footer>
+  </main>
+</div>
+
+<!-- mobile bottom tab bar (mirrors the sidebar) -->
+<div class="mobilebar">
+  <div class="navlink" data-goto="home"><span class="ic">🏠</span><span data-i18n="navm_home">الرئيسية</span></div>
+  <div class="navlink" data-goto="live"><span class="ic">🔴</span><span data-i18n="navm_live">مسح حي</span></div>
+  <div class="navlink" data-goto="analyze"><span class="ic">📊</span><span data-i18n="navm_analyze">تحليل</span></div>
+  <div class="navlink" data-goto="verify"><span class="ic">🔍</span><span data-i18n="navm_verify">تحقق</span></div>
+  <div class="navlink" data-goto="advise"><span class="ic">💡</span><span data-i18n="navm_advise">مستشار</span></div>
+  <div class="navlink" data-goto="zones"><span class="ic">📉</span><span data-i18n="navm_zones">عرض/طلب</span></div>
+  <div class="navlink" data-goto="signals"><span class="ic">📡</span><span data-i18n="navm_signals">إشارات</span></div>
+  <div class="navlink" data-goto="pricing"><span class="ic">💳</span><span data-i18n="navm_pricing">أسعار</span></div>
+  <div class="navlink" data-goto="billing"><span class="ic">🧾</span><span data-i18n="navm_billing">فواتير</span></div>
+</div>
 
 <div class="modal" id="modal"><div class="box">
   <h3 id="mTitle" data-i18n="m_login">تسجيل الدخول</h3>
@@ -300,8 +419,12 @@ const SERVER_PROVIDER = "{{ provider }}";
 const BRAND = "{{ brand }}";
 
 const I18N = {
-  ar:{nav_app:"التطبيق",nav_signals:"الإشارات",nav_pricing:"الأسعار",nav_billing:"الفواتير",login:"دخول",
-    logout:"خروج",chip_agents:"12 وكيل ذكاء اصطناعي",
+  ar:{nav_home:"الرئيسية",nav_live:"المسح الحي",nav_analyze:"تحليل الشارت",nav_verify:"التحقق من إشارة",
+    nav_advise:"المستشار الذكي",nav_zones:"العرض والطلب",nav_signals:"الإشارات",nav_pricing:"الأسعار",nav_billing:"الفواتير",
+    nav_group_tools:"الأدوات",nav_group_more:"المزيد",
+    navm_home:"الرئيسية",navm_live:"مسح حي",navm_analyze:"تحليل",navm_verify:"تحقق",navm_advise:"مستشار",
+    navm_zones:"عرض/طلب",navm_signals:"إشارات",navm_pricing:"أسعار",navm_billing:"فواتير",cta_live:"🔴 اقرأ السوق الآن",
+    login:"دخول",logout:"خروج",chip_agents:"12 وكيل ذكاء اصطناعي",
     hero_h1:'حلّل أي شارت في <span>أقل من 30 ثانية</span>',
     hero_p:"ارفع صورة الشارت، تحقّق من أي إشارة لكشف التزوير، واستشر الذكاء الاصطناعي لحماية رأس مالك — مدعوم بـ12 وكيلاً متخصصاً.",
     cta_try:"جرّب الآن مجاناً",s_agents:"وكلاء متخصصون",s_feat:"أدوات تحليل",s_prov:"محرّك التحليل",s_lang:"عربي / إنجليزي",
@@ -316,7 +439,11 @@ const I18N = {
     h1t:"ارفع الشارت",h1p:"خُذ سكرين شوت أو ارفع أي شارت من أي منصة.",
     h2t:"12 وكيل يحلّلون",h2p:"خلال أقل من 30 ثانية، 12 وكيلاً يعملون بالتوازي.",
     h3t:"النتيجة فوراً",h3p:"الاتجاه، الدخول، الستوب، الأهداف، ومستوى الثقة.",
-    app_h:"منصة التحليل",app_sub:"اختر الأداة، ارفع الشارت، واحصل على النتيجة.",
+    app_h:"تحليل الشارت",an_sub:"ارفع صورة الشارت ودع 12 وكيلاً يقرأون الاتجاه، الدخول، الستوب والأهداف.",
+    verify_h:"التحقق من إشارة",verify_sub:"ارفع الإشارة مع شارتِها — الذكاء الاصطناعي يكشف إن كانت حقيقية أم مفبركة.",
+    advise_h:"المستشار الذكي",advise_sub:"ارفع شارتك وحدّد صفقتك — نصيحة واضحة: إغلاق، تقليل، تحوّط، أو استمرار.",
+    zones_h:"مناطق العرض والطلب",zones_sub:"أقرب مناطق العرض والطلب المهمّة، جاهزة على شارتك.",
+    zones:"المناطق",
     t_analyze:"📊 تحليل الشارت",t_verify:"🔍 التحقق من إشارة",t_advise:"💡 المستشار الذكي",t_zones:"📉 العرض والطلب",
     t_quant:"🔴 المسح الحي",
     live_h:"المسح الحي للسوق",live_sub:"قراءة مباشرة من بيانات السوق الحقيقية — بدون صورة وبدون مفتاح. الأرقام محسوبة بقواعد شفّافة.",
@@ -328,7 +455,7 @@ const I18N = {
     q_support:"الدعم",q_resistance:"المقاومة",q_loading:"جارٍ قراءة السوق…",q_none:"لا توجد أداة محددة.",
     q_scan_empty:"لا نتائج بعد. اضغط \"امسح كل الأسواق\".",q_wait_note:"لا أفضليّة واضحة — الأفضل الانتظار.",
     drop_msg:"اسحب صورة الشارت هنا أو اضغط للاختيار",lbl_symbol:"الرمز",lbl_tf:"الفريم",
-    lbl_claim:"نص الإشارة / الادعاء (اختياري)",lbl_mode:"وضع التحليل",
+    lbl_claim:"نص الإشارة / الادعاء (اختياري)",lbl_position:"تفاصيل صفقتك (اختياري)",lbl_mode:"وضع التحليل",
     mode_fast:"سريع (12 وكيل بمكالمة واحدة)",mode_full:"كامل (مكالمة لكل وكيل)",
     run:"حلّل الآن",auth_hint:"تحتاج تسجيل دخول لاستعمال التحليل. سجّل مجاناً — تجربة واحدة لكل أداة.",
     result_ph:"النتيجة بتظهر هنا بعد الرفع.",
@@ -355,8 +482,12 @@ const I18N = {
     error:"صار خطأ، جرّب مرة تانية.",demo_badge:"تجريبي",live_badge:"حي",
     zone_note:"ملاحظة",action_hold:"استمرار",action_reduce:"تقليل",action_close:"إغلاق",action_hedge:"تحوّط",
     foot_terms:"الشروط",foot_privacy:"الخصوصية"},
-  en:{nav_app:"App",nav_signals:"Signals",nav_pricing:"Pricing",nav_billing:"Billing",login:"Login",
-    logout:"Logout",chip_agents:"12 AI agents",
+  en:{nav_home:"Home",nav_live:"Live Scan",nav_analyze:"Chart Analysis",nav_verify:"Verify Signal",
+    nav_advise:"Smart Advisor",nav_zones:"Supply & Demand",nav_signals:"Signals",nav_pricing:"Pricing",nav_billing:"Billing",
+    nav_group_tools:"Tools",nav_group_more:"More",
+    navm_home:"Home",navm_live:"Live",navm_analyze:"Analyze",navm_verify:"Verify",navm_advise:"Advisor",
+    navm_zones:"Zones",navm_signals:"Signals",navm_pricing:"Pricing",navm_billing:"Billing",cta_live:"🔴 Read the market now",
+    login:"Login",logout:"Logout",chip_agents:"12 AI agents",
     hero_h1:'Analyze any chart in <span>under 30 seconds</span>',
     hero_p:"Upload your chart for instant analysis, verify any signal to detect fraud, and consult AI to protect your capital — powered by 12 specialized agents.",
     cta_try:"Try it free",s_agents:"Specialized agents",s_feat:"Analysis tools",s_prov:"Analysis engine",s_lang:"Arabic / English",
@@ -371,7 +502,11 @@ const I18N = {
     h1t:"Upload chart",h1p:"Screenshot or upload any chart from any platform.",
     h2t:"12 agents analyze",h2p:"In under 30 seconds, 12 agents work in parallel.",
     h3t:"Instant answer",h3p:"Direction, entry, stop, targets and confidence.",
-    app_h:"Analysis platform",app_sub:"Pick a tool, upload the chart, get the result.",
+    app_h:"Chart Analysis",an_sub:"Upload the chart and let 12 agents read direction, entry, stop and targets.",
+    verify_h:"Verify Signal",verify_sub:"Submit the signal with its chart — AI reveals whether it is genuine or fake.",
+    advise_h:"Smart Advisor",advise_sub:"Upload your chart and position — a clear call: close, reduce, hedge or hold.",
+    zones_h:"Supply & Demand",zones_sub:"The nearest key supply and demand zones, mapped on your chart.",
+    zones:"Zones",
     t_analyze:"📊 Chart Analysis",t_verify:"🔍 Verify Signal",t_advise:"💡 Smart Advisor",t_zones:"📉 Supply & Demand",
     t_quant:"🔴 Live Scan",
     live_h:"Live market scan",live_sub:"A direct read from real market data — no image, no key needed. Numbers are computed by transparent rules.",
@@ -383,7 +518,7 @@ const I18N = {
     q_support:"Support",q_resistance:"Resistance",q_loading:"Reading the market…",q_none:"No instrument selected.",
     q_scan_empty:'No results yet. Press "Scan all markets".',q_wait_note:"No clear edge — best to wait.",
     drop_msg:"Drag a chart image here or click to choose",lbl_symbol:"Symbol",lbl_tf:"Timeframe",
-    lbl_claim:"Signal text / claim (optional)",lbl_mode:"Analysis mode",
+    lbl_claim:"Signal text / claim (optional)",lbl_position:"Your position details (optional)",lbl_mode:"Analysis mode",
     mode_fast:"Fast (12 agents, one call)",mode_full:"Full (one call per agent)",
     run:"Analyze now",auth_hint:"You need an account to use analysis. Sign up free — one try per tool.",
     result_ph:"The result appears here after upload.",
@@ -421,6 +556,24 @@ const $ = s => document.querySelector(s);
    and run script in the user's session. Escape at the sink, always. */
 const esc = s => String(s==null?"":s).replace(/[&<>"']/g,
   c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ---------- router: one page per tool ---------- */
+const PAGES = new Set(["home","live","analyze","verify","advise","zones","signals","pricing","billing"]);
+let PAGE = "home";
+function go(page){
+  if(!PAGES.has(page)) page = "home";
+  PAGE = page;
+  document.querySelectorAll("[data-page]").forEach(n=>
+    n.classList.toggle("active", n.dataset.page===page));
+  document.querySelectorAll("[data-goto]").forEach(n=>
+    n.classList.toggle("active", n.dataset.goto===page));
+  if(location.hash !== "#"+page) history.replaceState(null,"","#"+page);
+  window.scrollTo({top:0,behavior:"smooth"});
+  if(page==="live" && !window._liveDone) runQuant();
+  if(page==="signals") renderSignals();
+  if(page==="pricing") renderPlans();
+  if(page==="billing") renderBilling();
+}
 
 function applyLang(){
   document.documentElement.lang = LANG;
@@ -460,45 +613,57 @@ async function refreshMe(){
   const r = await fetch("/api/me"); const d = await r.json();
   window._me = d.user; window._quotas = d.quotas||{};
   $("#authBtn").innerHTML = d.user ? t("logout") : t("login");
-  $("#authHint").classList.toggle("hidden", !!d.user);
+  document.querySelectorAll(".authhint").forEach(el=>el.classList.toggle("hidden", !!d.user));
   renderPlans();
   renderBilling();
 }
 
-/* ---------- upload ---------- */
-let IMG = null;
-const drop=$("#drop"), file=$("#file");
-drop.onclick = ()=>file.click();
-file.onchange = ()=>loadFile(file.files[0]);
-["dragover","dragenter"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over");}));
-["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over");}));
-drop.addEventListener("drop",e=>{ if(e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]); });
-function loadFile(f){
+/* ---------- image upload (one drop zone per tool page) ---------- */
+const IMG = {};
+document.querySelectorAll(".toolpane").forEach(pane=>{
+  const feat = pane.dataset.tool;
+  const drop = pane.querySelector(".drop"), fin = pane.querySelector(".filein");
+  drop.onclick = ()=>fin.click();
+  fin.onchange = ()=>loadFile(feat, fin.files[0]);
+  ["dragover","dragenter"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over");}));
+  ["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over");}));
+  drop.addEventListener("drop",e=>{ if(e.dataTransfer.files[0]) loadFile(feat, e.dataTransfer.files[0]); });
+  pane.querySelector(".runbtn").onclick = ()=>runTool(feat, pane);
+});
+function loadFile(feat, f){
   if(!f) return;
-  const rd=new FileReader();
-  rd.onload=()=>{ IMG=rd.result;
-    drop.innerHTML = `<img src="${IMG}"/><div style="margin-top:10px;font-size:12.5px;color:var(--muted)">${f.name}</div>`;
-    drop.appendChild(file); };
+  const pane = document.querySelector(`.toolpane[data-tool="${feat}"]`);
+  const drop = pane.querySelector(".drop"), fin = pane.querySelector(".filein");
+  const rd = new FileReader();
+  rd.onload = ()=>{ IMG[feat] = rd.result;
+    drop.innerHTML = `<img src="${IMG[feat]}"/><div style="margin-top:10px;font-size:12.5px;color:var(--muted)">${esc(f.name)}</div>`;
+    drop.appendChild(fin); };
   rd.readAsDataURL(f);
 }
-
-/* ---------- feature tabs ---------- */
-let FEAT="quant";
-document.querySelectorAll(".tab").forEach(tb=>tb.onclick=()=>{
-  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
-  tb.classList.add("active"); FEAT=tb.dataset.feat; syncFields();
-});
-function syncFields(){
-  const isQ = FEAT==="quant";
-  $("#quantCtl").classList.toggle("hidden", !isQ);
-  $("#imgCtl").classList.toggle("hidden", isQ);
-  $("#fSymbol").classList.toggle("hidden", FEAT!=="analyze");
-  $("#fTf").classList.toggle("hidden", FEAT!=="analyze");
-  $("#fMode").classList.toggle("hidden", FEAT!=="analyze");
-  $("#fClaim").classList.toggle("hidden", !(FEAT==="verify"||FEAT==="advise"));
-  $("#claim").placeholder = FEAT==="advise" ? "Long XAUUSD @2410, SL 2398" : "Buy XAUUSD 2410, TP 2440, SL 2398";
+function setResult(feat, html){
+  const el = document.querySelector(`.result[data-result="${feat}"]`);
+  if(el) el.innerHTML = html;
 }
-syncFields();
+async function runTool(feat, pane){
+  if(!window._me){ openModal(); return; }
+  if(!IMG[feat]){ setResult(feat, `<p class="err">${t("need_img")}</p>`); return; }
+  const btn = pane.querySelector(".runbtn"); const old = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = `<span class="spin"></span> ${t("analyzing")}`;
+  const claim = pane.querySelector(".inclaim");
+  const val = s => { const el = pane.querySelector(s); return el ? el.value : ""; };
+  const payload = {image:IMG[feat], symbol:val(".insym"), timeframe:val(".intf")||"H4",
+    mode:val(".inmode")||"fast", claim:claim?claim.value:"", position:claim?claim.value:""};
+  try{
+    const r = await fetch("/api/"+feat, {method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)});
+    const d = await r.json();
+    if(r.status===401){ openModal(); setResult(feat, `<p class="err">${t("need_auth")}</p>`); }
+    else if(r.status===402){ setResult(feat, `<p class="err">${t("quota")}</p>`); }
+    else if(!r.ok){ setResult(feat, `<p class="err">${d.detail||t("error")}</p>`); }
+    else { render(feat, d.result); refreshMe(); }
+  }catch(e){ setResult(feat, `<p class="err">${t("error")}</p>`); }
+  btn.disabled = false; btn.innerHTML = old;
+}
 
 /* ---------- live quant ---------- */
 let MARKETS=null;
@@ -506,7 +671,7 @@ async function loadMarkets(){
   if(MARKETS) return MARKETS;
   MARKETS = await (await fetch("/api/markets")).json();
   $("#qSymbol").innerHTML = MARKETS.symbols.map(s=>`<option value="${s.symbol}">${s.symbol} — ${s.label}</option>`).join("");
-  $("#qTf").innerHTML = MARKETS.timeframes.map(t=>`<option value="${t}" ${t==="H4"?"selected":""}>${t}</option>`).join("");
+  $("#qTf").innerHTML = MARKETS.timeframes.map(tf=>`<option value="${tf}" ${tf==="H4"?"selected":""}>${tf}</option>`).join("");
   return MARKETS;
 }
 const fmt=(v,d)=>(v===null||v===undefined||isNaN(v))?"—":Number(v).toFixed(d??2);
@@ -516,17 +681,18 @@ function reasonsHtml(reasons){
 }
 $("#quantBtn").onclick = ()=>runQuant();
 $("#scanBtn").onclick = ()=>runScan();
+function setLive(html){ $("#resultLive").innerHTML = html; }
 async function runQuant(){
   await loadMarkets();
   const sym=$("#qSymbol").value, tf=$("#qTf").value;
   const acct=$("#qAccount").value||200, risk=$("#qRisk").value||1;
-  setResult(`<p class="sub"><span class="spin"></span> ${t("q_loading")}</p>`);
+  setLive(`<p class="sub"><span class="spin"></span> ${t("q_loading")}</p>`);
   try{
     const r=await fetch(`/api/quant?symbol=${sym}&timeframe=${tf}&account=${acct}&risk=${risk}`);
     const R=await r.json();
-    if(!r.ok){ setResult(`<p class="err">${R.detail||R.error||t("error")}</p>`); return; }
-    renderQuant(R);
-  }catch(e){ setResult(`<p class="err">${t("error")}</p>`); }
+    if(!r.ok){ setLive(`<p class="err">${R.detail||R.error||t("error")}</p>`); return; }
+    renderQuant(R); window._liveDone = true;
+  }catch(e){ setLive(`<p class="err">${t("error")}</p>`); }
 }
 function renderQuant(R){
   const d=R.decision, p=R.plan, sz=R.size, c=R.cost, ind=R.indicators, dg=R.digits;
@@ -572,7 +738,7 @@ function renderQuant(R){
       html+=`<p class="sub" style="font-size:12.5px">${t("q_invalidation")}: ${esc(LANG==="ar"?e.invalidation_ar:e.invalidation_en)}</p>`;
     }
   }
-  setResult(html);
+  setLive(html);
 }
 async function runScan(){
   await loadMarkets();
@@ -595,26 +761,7 @@ async function runScan(){
   }catch(e){ tb.innerHTML=`<tr><td colspan="9" class="err">${t("error")}</td></tr>`; }
 }
 
-$("#runBtn").onclick = async ()=>{
-  if(!window._me){ openModal(); return; }
-  if(!IMG){ setResult(`<p class="err">${t("need_img")}</p>`); return; }
-  const btn=$("#runBtn"); btn.disabled=true; btn.innerHTML=`<span class="spin"></span> ${t("analyzing")}`;
-  const payload={image:IMG, symbol:$("#symbol").value, timeframe:$("#timeframe").value,
-    mode:$("#mode").value, claim:$("#claim").value, position:$("#claim").value};
-  try{
-    const r=await fetch("/api/"+FEAT,{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(payload)});
-    const d=await r.json();
-    if(r.status===401){ openModal(); setResult(`<p class="err">${t("need_auth")}</p>`); }
-    else if(r.status===402){ setResult(`<p class="err">${t("quota")}</p>`); }
-    else if(!r.ok){ setResult(`<p class="err">${d.detail||t("error")}</p>`); }
-    else { render(FEAT, d.result); refreshMe(); }
-  }catch(e){ setResult(`<p class="err">${t("error")}</p>`); }
-  btn.disabled=false; btn.innerHTML=t("run");
-};
-function setResult(html){ $("#result").innerHTML=html; }
 function badge(live){ return `<span class="badge ${live?"live":"demo"}">${live?t("live_badge"):t("demo_badge")}</span>`; }
-
 function render(feat, R){
   if(feat==="analyze") return renderAnalyze(R);
   if(feat==="verify")  return renderVerify(R);
@@ -638,11 +785,11 @@ function renderAnalyze(R){
     html += R.agents.map(a=>`<div class="agent"><span>${esc(LANG==="ar"?a.ar:a.en)}</span>
       <span><span class="v-${esc(a.bias)}">${esc(a.bias)}</span> · ${esc(a.confidence)}%</span></div>`).join("");
   }
-  setResult(html);
+  setResult("analyze", html);
 }
 function renderVerify(R){
   const v=esc(R.verdict||"suspicious");
-  setResult(`<div style="display:flex;justify-content:space-between;align-items:center">
+  setResult("verify", `<div style="display:flex;justify-content:space-between;align-items:center">
     <span class="sub" style="margin:0">${t("verdict")}</span>${badge(R.live)}</div>
     <div class="verdict v-${v}">${String(v).toUpperCase()}</div>
     <div style="color:var(--muted)">${t("score")}: <b>${esc(R.score??"—")}%</b></div>
@@ -652,14 +799,14 @@ function renderVerify(R){
 }
 function renderAdvise(R){
   const a=esc(R.action||"hold");
-  setResult(`<div style="display:flex;justify-content:space-between;align-items:center">
+  setResult("advise", `<div style="display:flex;justify-content:space-between;align-items:center">
     <span class="sub" style="margin:0">${t("action")}</span>${badge(R.live)}</div>
     <div class="verdict">${t("action_"+a)}</div>
     <p style="color:var(--muted)">${esc(LANG==="ar"?R.advice_ar:R.advice_en)}</p>`);
 }
 function renderZones(R){
-  setResult(`<div style="display:flex;justify-content:space-between;align-items:center">
-    <span class="sub" style="margin:0">${t("zones")||"Zones"}</span>${badge(R.live)}</div>
+  setResult("zones", `<div style="display:flex;justify-content:space-between;align-items:center">
+    <span class="sub" style="margin:0">${t("zones")}</span>${badge(R.live)}</div>
     <div class="kv">
       <div><small>${t("supply")}</small><b>${esc((R.supply||[]).join(" · "))||"—"}</b></div>
       <div><small>${t("demand")}</small><b>${esc((R.demand||[]).join(" · "))||"—"}</b></div>
@@ -721,9 +868,7 @@ function fmtDate(ts){
   return d.toLocaleDateString(LANG==="ar"?"ar":"en-GB",
     {year:"numeric",month:"short",day:"numeric"});
 }
-function fmtMoney(n){
-  return "$" + Number(n||0).toFixed(2);
-}
+function fmtMoney(n){ return "$" + Number(n||0).toFixed(2); }
 function billCard(label, value, sub, tone){
   return `<div class="card"><div class="sub">${label}</div>
     <div style="font-size:20px;font-weight:700;margin:4px 0">${value}</div>
@@ -812,13 +957,18 @@ async function choosePlan(k){
 
 /* ---------- delegated actions (CSP forbids inline handlers) ---------- */
 document.addEventListener("click", e=>{
+  const nav = e.target.closest("[data-goto]");
+  if(nav){ e.preventDefault(); go(nav.dataset.goto); return; }
   const el = e.target.closest("[data-action]");
   if(!el) return;
   const a = el.dataset.action;
   if(a==="cancel-sub"){ e.preventDefault(); cancelSub(); }
   else if(a==="choose-plan"){ e.preventDefault(); choosePlan(el.dataset.plan); }
   else if(a==="open-login"){ e.preventDefault(); openModal(); }
-  else if(a==="goto"){ e.preventDefault(); location.hash = "#" + el.dataset.hash; }
+});
+window.addEventListener("hashchange", ()=>{
+  const h = location.hash.replace("#","");
+  if(PAGES.has(h) && h!==PAGE) go(h);
 });
 
 /* ---------- boot ---------- */
@@ -833,7 +983,6 @@ document.addEventListener("click", e=>{
   $("#sAgents").textContent = h.agents;
   await refreshMe();
   await loadMarkets();
-  runQuant();
   // Provider self-check: shows which configured keys actually answer.
   const pc=$("#provCheck");
   if(pc) pc.onclick=async (e)=>{
@@ -846,6 +995,8 @@ document.addEventListener("click", e=>{
         (x.ok?"✅ ":"⚠️ ")+x.provider).join("  ");
     }catch(_){ box.textContent=" ⚠️"; }
   };
+  const start = location.hash.replace("#","");
+  go(PAGES.has(start) ? start : "home");
 })();
 </script>
 </body>

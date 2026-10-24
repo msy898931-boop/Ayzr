@@ -143,6 +143,13 @@ it** (`config.secret_key()` raises SystemExit). `wsgi.py` is the gunicorn entry.
   `unsafe-inline`, so a single unescaped interpolation is also a script
   injection. Add a sink -> escape it; there is no inline `onclick` left on
   purpose (event delegation via `data-action`).
+- The UI is a single HTML file but a multi-page *app shell*: every tool and
+  section is its own `.page` element (`data-page="…"`) and only one is visible
+  at a time. The sidebar (`data-goto`, desktop) and the bottom tab bar
+  (mobile) both call `go(page)`, which also keeps `location.hash` in sync so a
+  deep link / refresh lands on the same page. Adding a page means adding a
+  `.page` block, a `data-goto` link in both navs, and a `PAGES` entry -- do not
+  reintroduce a tab strip that crams every tool into one view.
 - The product name is `config.BRAND_NAME` everywhere it is shown, including the
   system prompts (`engine._brand`). A white-label deployment must not leak
   another brand into its own model prompts or its own UI.
