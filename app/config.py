@@ -22,7 +22,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-VERSION = "1.8.0"
+VERSION = "1.9.0"
 
 # The product name shown in the UI, page title and footer. Kept in config (not
 # hard-coded) so an operator can white-label without touching the template, and
@@ -71,6 +71,39 @@ TRUST_PROXY = _bool("TRUST_PROXY", False)
 # process, which is correct for a single worker. Set it to share one limit
 # across every gunicorn worker and host: redis://host:6379/0
 REDIS_URL = os.environ.get("REDIS_URL", "").strip()
+
+# ------------------------------------------------------------------- security
+# CSRF protection for state-changing requests. Enabled by default; only turn it
+# off if a trusted non-browser client is posting to the API (it weakens the
+# cookie-based protections). A token is issued per session and required in the
+# X-CSRF-Token header on every POST.
+CSRF_PROTECT = _bool("CSRF_PROTECT", True)
+
+# Reject a JSON API call whose Content-Type is not application/json. This blocks
+# "simple" cross-site POSTs (text/plain, form-urlencoded) that skip the CORS
+# preflight, so a browser cannot be made to fire an authenticated mutation.
+REQUIRE_JSON_CONTENT_TYPE = _bool("REQUIRE_JSON_CONTENT_TYPE", True)
+
+# Password policy. The minimum is deliberately short enough for the product's
+# free tier but rejects the passwords that show up in every credential-stuffing
+# list. Set PASSWORD_MIN_LENGTH=1 to disable (not recommended).
+PASSWORD_MIN_LENGTH = _int("PASSWORD_MIN_LENGTH", 8)
+
+# A top-level domain that should never appear in a real signup. "example.com" is
+# reserved (RFC 2606), so blocking it turns the shipped sample credentials into
+# an obvious, harmless mistake rather than a live account.
+BLOCKED_EMAIL_DOMAINS = tuple(
+    d.strip().lower() for d in
+    os.environ.get("BLOCKED_EMAIL_DOMAINS", "example.com,example.org,example.net,test,invalid,localhost").split(",")
+    if d.strip())
+
+# HSTS: only send when the app is served over HTTPS (production behind TLS).
+HSTS_SECONDS = _int("HSTS_SECONDS", 31536000)
+
+# Where a user may be sent after login. Only same-origin relative paths are
+# honoured; an absolute or scheme-relative URL is dropped. Kept here so the
+# allow-list is one obvious place.
+SAFE_REDIRECT_PREFIXES = ("/",)
 
 # Log level for the request logger (DEBUG/INFO/WARNING/ERROR).
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").strip().upper()
@@ -144,3 +177,32 @@ def secret_key() -> str:
     # Development: derive a key that is stable for the life of the process but
     # not predictable across deployments.
     return os.environ.setdefault("_TRADLI_DEV_KEY", secrets.token_hex(32))
+
+
+def security_status() -> dict:
+    """A single, honest summary of what protection is actually on right now.
+
+    Surfaced by ``/api/health`` so an operator (or a monitoring probe) can see,
+    at a glance, which layers are enabled and which are still on their insecure
+    development default. Every value here is a *setting*, not a claim: nothing
+    is reported as on unless the corresponding code path is active.
+    """
+    from security import backend_name  # imported lazily: security imports config
+    return {
+        "csrf": CSRF_PROTECT,
+        "require_json_content_type": REQUIRE_JSON_CONTENT_TYPE,
+        "password_min_length": PASSWORD_MIN_LENGTH,
+        "login_lockout": {"attempts": LOGIN_MAX_ATTEMPTS, "window_s": LOGIN_WINDOW,
+                          "lockout_s": LOGIN_LOCKOUT},
+        "rate_limit": {"calls": RATE_LIMIT_CALLS, "window_s": RATE_LIMIT_WINDOW,
+                       "backend": backend_name()},
+        "hsts": bool(IS_PROD and HSTS_SECONDS),
+        "session_cookie_secure": bool(IS_PROD),
+        "secret_key_set": bool(os.environ.get("SECRET_KEY")),
+        "trust_proxy": TRUST_PROXY,
+        "admin_api": admin_configured(),
+        "signal_ingest": ingest_configured(),
+        "billing": billing_configured(),
+        "webhook": webhook_configured(),
+    }
+

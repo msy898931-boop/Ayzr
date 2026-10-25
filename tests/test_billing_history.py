@@ -114,14 +114,14 @@ def test_history_reflects_a_cancel(auth_client, billing):
 def test_history_never_leaks_another_users_orders(client, clean, billing):
     # user A buys...
     client.post("/api/auth/register",
-                json={"email": "a@example.com", "password": "secret123"})
+                json={"email": "a@tradli.io", "password": "secret123"})
     buy(client, billing, ref="pi_a", sub="sub_a")
     assert client.get("/api/billing/history").get_json()["totals"]["count"] == 1
     client.post("/api/auth/logout")
 
     # ...user B must see none of it.
     client.post("/api/auth/register",
-                json={"email": "b@example.com", "password": "secret123"})
+                json={"email": "b@tradli.io", "password": "secret123"})
     d = client.get("/api/billing/history").get_json()
     assert d["orders"] == []
     assert d["totals"]["count"] == 0

@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#0a0b12"/>
 <meta name="description" content="{{ brand }} — منصة تحليل الأسواق بالذكاء الاصطناعي: تحليل الشارت، كشف تزوير الإشارات، المستشار الذكي، ومناطق العرض والطلب."/>
 <meta name="robots" content="noindex"/>
+<meta name="csrf-token" content="{{ csrf_token }}"/>
 <meta property="og:type" content="website"/>
 <meta property="og:title" content="{{ brand }}"/>
 <meta property="og:description" content="حلّل أي شارت في أقل من 30 ثانية — مدعوم بـ12 وكيل ذكاء اصطناعي."/>
@@ -633,6 +634,32 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s==null?"":s).replace(/[&<>"']/g,
   c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
+/* The CSRF token bound to this session. It is minted server-side and embedded
+   in a meta tag; every state-changing request echoes it in a header so a
+   cross-site page (which cannot read it) cannot forge an authenticated call. */
+function csrf(){
+  const m = document.querySelector('meta[name="csrf-token"]');
+  return m ? m.content : "";
+}
+
+/* One place that talks to the API. It attaches the CSRF header and the JSON
+   content type on mutations, so no call site has to remember either. `opts`
+   may override method/body/headers; a JSON body is stringified for you. */
+async function api(path, opts){
+  opts = opts || {};
+  const method = (opts.method || "GET").toUpperCase();
+  const headers = Object.assign({}, opts.headers);
+  const init = {method, headers, credentials:"same-origin"};
+  if(opts.json !== undefined){
+    headers["Content-Type"] = "application/json";
+    init.body = JSON.stringify(opts.json);
+  } else if(opts.body !== undefined){
+    init.body = opts.body;
+  }
+  if(method !== "GET" && method !== "HEAD") headers["X-CSRF-Token"] = csrf();
+  return fetch(path, init);
+}
+
 /* ---------- router: one page per tool ---------- */
 const PAGES = new Set(["home","live","analyze","verify","advise","zones","signals","pricing","billing"]);
 let PAGE = "home";
@@ -679,20 +706,26 @@ $("#mSwitch").onclick = e=>{ e.preventDefault(); REGISTER=!REGISTER;
   $("#mSwitch").textContent = t(REGISTER?"m_switch2":"m_switch"); };
 $("#modal").onclick = e=>{ if(e.target.id==="modal") closeModal(); };
 $("#authBtn").onclick = async ()=>{
-  if(window._me){ await fetch("/api/auth/logout",{method:"POST"}); window._me=null; refreshMe(); }
+  if(window._me){ await api("/api/auth/logout",{method:"POST"}); window._me=null; refreshMe(); }
   else openModal();
 };
 $("#mGo").onclick = async ()=>{
   const email=$("#mEmail").value, password=$("#mPass").value;
   const url = REGISTER ? "/api/auth/register" : "/api/auth/login";
-  const r = await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({email,password})});
+  const r = await api(url,{method:"POST",json:{email,password}});
   const d = await r.json();
   if(!r.ok){ $("#mErr").textContent = d.error||"error"; $("#mErr").classList.remove("hidden"); return; }
+  setCsrf(d.csrf);           // the session (and token) rotates on login
   closeModal(); await refreshMe();
 };
+/* The token is reissued when the session changes; keep the meta tag in step. */
+function setCsrf(tok){
+  const m = document.querySelector('meta[name="csrf-token"]');
+  if(m && tok) m.content = tok;
+}
 async function refreshMe(){
   const r = await fetch("/api/me"); const d = await r.json();
+  setCsrf(d.csrf);
   window._me = d.user; window._quotas = d.quotas||{};
   $("#authBtn").innerHTML = d.user ? t("logout") : t("login");
   document.querySelectorAll(".authhint").forEach(el=>el.classList.toggle("hidden", !!d.user));
@@ -736,8 +769,7 @@ async function runTool(feat, pane){
   const payload = {image:IMG[feat], symbol:val(".insym"), timeframe:val(".intf")||"H4",
     mode:val(".inmode")||"fast", claim:claim?claim.value:"", position:claim?claim.value:""};
   try{
-    const r = await fetch("/api/"+feat, {method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(payload)});
+    const r = await api("/api/"+feat, {method:"POST",json:payload});
     const d = await r.json();
     if(r.status===401){ openModal(); setResult(feat, `<p class="err">${t("need_auth")}</p>`); }
     else if(r.status===402){ setResult(feat, `<p class="err">${t("quota")}</p>`); }
@@ -944,7 +976,7 @@ async function cancelSub(){
     ? "سيتوقف التجديد التلقائي. تحافظ على اشتراكك حتى نهاية المدة الحالية. متابعة؟"
     : "Auto-renewal will stop. You keep your plan until the end of the current term. Continue?";
   if(!confirm(msg)) return;
-  const r=await fetch("/api/subscription/cancel",{method:"POST"});
+  const r=await api("/api/subscription/cancel",{method:"POST"});
   if(r.ok){ await refreshMe(); }
   else { alert(LANG==="ar"?"تعذّر إلغاء التجديد.":"Could not cancel renewal."); }
 }
@@ -1037,8 +1069,7 @@ async function choosePlan(k){
   if(!window._me){ openModal(); return; }
   if(k==="free") return;
   const ar = $("#autoRenew") ? $("#autoRenew").checked : false;
-  const r=await fetch("/api/checkout",{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({plan:k, auto_renew:ar})});
+  const r=await api("/api/checkout",{method:"POST",json:{plan:k, auto_renew:ar}});
   const d=await r.json().catch(()=>({}));
   if(r.ok && d.checkout_url){ window.location.href=d.checkout_url; return; }
   // No real provider configured yet: say so plainly instead of faking an upgrade.

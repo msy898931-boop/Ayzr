@@ -37,7 +37,7 @@ def test_health(client):
     assert body["agents"] == 12
     assert body["live"] is False  # no key configured in tests
     assert body["env"] == "development"
-    assert body["version"] == "1.8.0"
+    assert body["version"] == "1.9.0"
 
 
 def test_index_renders(client):
@@ -257,7 +257,7 @@ def test_consume_is_atomic_under_concurrency(clean):
     import threading
 
     db = clean["db"]
-    uid = db.create_user("race@example.com", "secret123")["id"]
+    uid = db.create_user("race@tradli.io", "secret123")["id"]
     db.set_plan(uid, "basic")  # basic = 3 analyze/day
     limit = db.plan_limits("basic")["analyze"]
 

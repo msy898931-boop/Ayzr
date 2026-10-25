@@ -372,8 +372,28 @@ curl -X POST http://localhost:8000/api/subscription/cancel
   15 دقيقة (قابل للضبط). اختُبر: 8 محاولات → `429`.
 - **حدّ طلبات لكل IP** على المسارات المكلفة (`analyze/verify/advise/zones/quant/scan`)
   لمنع استهلاك حصة المزوّدين. الافتراضي 60 طلب/دقيقة.
+- **حماية CSRF**: كل طلب يغيّر الحالة (POST) يجب أن يحمل رمزاً في ترويسة
+  `X-CSRF-Token` مطابقاً للرمز المخزّن في الجلسة. يُصدر الرمز من الخادم ويُضمَّن
+  في الصفحة (`<meta name="csrf-token">`)، ويُبدَّل عند تسجيل الدخول/الخروج. صفحة
+  خارجية لا تستطيع قراءته فلا تستطيع تزوير طلب مصادَق عليه. الويبهوك واستقبال
+  الإشارات مستثنيان (يُصادَق عليهما بتوقيع HMAC/رمز Bearer).
+- **حاجز Content-Type**: أي طلب يغيّر الحالة ولا يكون `application/json`
+  يُرفض بـ`415`. هذا يمنع POST «البسيط» من موقع آخر (text/plain أو
+  form-urlencoded) الذي يتجاوز فحص CORS المسبق.
+- **سياسة كلمة السر**: 8 أحرف على الأقل، ورفض كلمات السر الشائعة/البسيطة
+  (كل حرف واحد، أو كلمة من قائمة المسرّبات). قابل للضبط عبر `PASSWORD_MIN_LENGTH`.
+- **تحقق البريد**: نمط صالح + حظر النطاقات المحجوزة (example.com/test/invalid…)
+  عبر `BLOCKED_EMAIL_DOMAINS`، مع تطبيع الحالة والمسافات.
+- **إعادة توجيه آمنة**: يُقبل المسار النسبي من نفس الأصل فقط (`safe_next`)؛
+  أي URL مطلق أو `//evil.com` أو يحوي محارف تحكّم يُسقَط إلى `/`.
+- **تقنيع السجلّات**: أي مفتاح/توكن/توقيع (`sk_live_`, `whsec_`, `AIza`, `gsk_`,
+  `Bearer …`, `password=…`, `v1=…`) يُقنَّع قبل الكتابة في السجل عبر
+  `security.redact()`، فلا تتسرّب الأسرار إلى ملفات اللوج.
 - **رؤوس أمان** على كل استجابة: `X-Content-Type-Options`, `X-Frame-Options`,
-  `Referrer-Policy`، و`Strict-Transport-Security` في الإنتاج.
+  `Referrer-Policy`, `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy`,
+  `X-Permitted-Cross-Domain-Policies`، و`Strict-Transport-Security` في الإنتاج.
+- **`/.well-known/security.txt`** (RFC 9116): عنوان التواصل للباحثين الأمنيين،
+  مضبوط عبر `CONTACT_EMAIL`.
 - **CSP مع nonce لكل استجابة**: لا `unsafe-inline`، والسكربتات/الأنماط موقّعة
   بـnonce — أي حقن وسم واحد يفشل في التنفيذ، لا يكفي للهروب.
 - **تهريب HTML إلزامي**: كل ما يخرج من النموذج أو مصدر إشارات أو مستخدم يمر عبر

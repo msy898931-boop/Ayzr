@@ -213,6 +213,21 @@ it** (`config.secret_key()` raises SystemExit). `wsgi.py` is the gunicorn entry.
   token -> 403 (constant-time compare, rate limited). Never add a write route
   there without its own auth story.
 - Passwords: PBKDF2-SHA256, 120k iterations, per-user salt. Never plaintext.
+- State-changing requests carry a per-session CSRF token in `X-CSRF-Token`
+  (header set by the page's `api()` helper from the `<meta name="csrf-token">`
+  tag). `security.csrf_ok` compares it in constant time and the token is rotated
+  on login/logout. The webhook and signal-ingest paths are exempt because they
+  authenticate with an HMAC/bearer token and never use the session cookie.
+- Mutations must be `application/json` (`security.json_content_type_ok` -> 415
+  otherwise); this is what stops a cross-site "simple" POST that skips the CORS
+  preflight. Do not add a mutation endpoint that accepts form-encoded input.
+- Anything written to a log goes through `security.redact()` (or
+  `security.log_event`). Keys, bearer tokens and webhook signatures are masked;
+  do not `log.info("... %s", secret)` and rely on the pattern list catching it.
+- Passwords pass `db.password_problem` (length, not all one character, not in
+  the common-password list) and emails pass `db.validate_email` (shape +
+  `BLOCKED_EMAIL_DOMAINS`). Both are enforced in `db.create_user`, so any new
+  signup path inherits them.
 - Images: JSON `data:` URL or multipart `image`; max 8 MB decode / 12 MB request.
 - UI strings live in the inline `I18N` dict in `index.html`; keep AR and EN in
   sync when adding keys.
@@ -248,10 +263,18 @@ The suite lives in `tests/` (pytest). Run it with `python -m pytest -q`.
   than failing closed.
 - `test_signals_ingest.py` pins that ingest is off by default, needs the bearer
   token, and bounds every field (`db.add_signal`).
+- `test_hardening.py` pins the protection system: a mutation with no/wrong CSRF
+  token is 403, a non-JSON Content-Type is 415, the password/email policy
+  rejects the weak inputs, `safe_next` refuses off-site redirects, secrets are
+  redacted from logs, and the new headers plus `security.txt` are present. It
+  uses the `raw_client` fixture (no auto-token) for the CSRF-rejection cases.
 - Never let a test grant a plan by calling an endpoint. Grant it in the DB
   (`db.set_plan`) as the billing layer would, so the invariant stays testable.
 - `conftest.py` blanks every provider key *before* importing the app, so tests
   always exercise the deterministic DEMO path and never make a real API call.
+  Its default `client` fixture subclasses `FlaskClient` to echo the session's
+  CSRF token on mutations (the browser does the same via `api()`), so existing
+  tests do not each have to mint one; use `raw_client` to test the guard itself.
 - The API was also verified end-to-end with a scripted client (register ->
   analyze -> quota exhaustion -> checkout -> signed webhook -> plan granted ->
   verify -> advise -> zones -> history). Re-run after changing quotas, auth,

@@ -25,6 +25,34 @@ for _k in ("GEMINI_API_KEY", "GOOGLE_API_KEY", "GROQ_API_KEY",
     os.environ[_k] = ""
 
 import pytest  # noqa: E402
+from flask.testing import FlaskClient  # noqa: E402
+
+_SAFE = ("GET", "HEAD", "OPTIONS", "TRACE")
+
+
+class _CSRFClient(FlaskClient):
+    """A test client that echoes the session's CSRF token automatically.
+
+    The real browser reads the token from the page and sends it on every
+    mutation; doing that by hand in every test would be noise. This client mints
+    a token into the session if needed and attaches it to state-changing
+    requests, so tests exercise the real CSRF path (token must match the
+    session) without repeating the plumbing. Security tests that need to *omit*
+    the token use the `raw_client` fixture instead.
+    """
+
+    def open(self, *args, **kwargs):
+        method = str(kwargs.get("method", "GET")).upper()
+        if method not in _SAFE:
+            with self.session_transaction() as sess:
+                tok = sess.get("_csrf") or "test-csrf-token"
+                sess["_csrf"] = tok
+            headers = kwargs.get("headers")
+            if headers is None:
+                kwargs["headers"] = {"X-CSRF-Token": tok}
+            elif isinstance(headers, dict):
+                headers.setdefault("X-CSRF-Token", tok)
+        return super().open(*args, **kwargs)
 
 
 @pytest.fixture()
@@ -64,10 +92,20 @@ def clean(mods):
 @pytest.fixture()
 def client(clean):
     clean["server"].app.config["TESTING"] = True
+    clean["server"].app.test_client_class = _CSRFClient
     with clean["server"].app.test_client() as c:
         yield c
 
-def register(client, email: str = "tester@example.com", password: str = "secret123"):
+
+@pytest.fixture()
+def raw_client(clean):
+    """A client that does *not* add a CSRF token -- for testing the guard."""
+    clean["server"].app.config["TESTING"] = True
+    clean["server"].app.test_client_class = FlaskClient
+    with clean["server"].app.test_client() as c:
+        yield c
+
+def register(client, email: str = "tester@tradli.io", password: str = "secret123"):
     return client.post("/api/auth/register",
                        json={"email": email, "password": password})
 

@@ -24,6 +24,7 @@ import json
 import os
 import secrets
 import sys
+import time
 
 from flask import (Flask, g, jsonify, render_template, request, send_file,
                    session)
@@ -95,40 +96,29 @@ def client_ip() -> str:
     return request.remote_addr or "unknown"
 
 
+# Install the request-level protections (CSP nonce + CSRF token minting, and
+# the security headers) *before* the guard below, so Flask runs the minting
+# ``before_request`` first and the token exists by the time the guard checks it.
+security.init_app(app)
+
+
 @app.before_request
-def _csp_nonce():
-    """A fresh nonce per request, for the inline style/script we must allow.
+def _guard_requests():
+    """Reject cross-site state changes before any view runs.
 
-    The page ships its CSS and JS inline, so a nonce is the honest way to permit
-    exactly those blocks and nothing else -- an injected ``<script>`` has no
-    nonce and is refused by the browser. We also keep ``'unsafe-inline'`` out of
-    script-src, which is what makes the policy actually protective.
+    Order matters: the Content-Type guard is checked first (a cheap header
+    test), then the CSRF token. Both only apply to state-changing methods on
+    non-exempt paths. This runs after ``security.init_app``'s hook, which has
+    already minted the session's CSRF token.
     """
-    g.csp_nonce = secrets.token_urlsafe(16)
+    if not security.json_content_type_ok():
+        return jsonify({"error": "unsupported_media_type",
+                        "detail": "state-changing requests must be application/json"}), 415
+    if not security.csrf_ok():
+        log.warning("csrf rejected path=%s ip=%s", request.path, client_ip())
+        return jsonify({"error": "csrf_failed",
+                        "detail": "missing or invalid CSRF token"}), 403
 
-
-@app.after_request
-def _security_headers(resp):
-    resp.headers.setdefault("X-Content-Type-Options", "nosniff")
-    resp.headers.setdefault("X-Frame-Options", "DENY")
-    resp.headers.setdefault("Referrer-Policy", "same-origin")
-    resp.headers.setdefault("Permissions-Policy",
-                            "geolocation=(), microphone=(), camera=()")
-    nonce = getattr(g, "csp_nonce", "")
-    resp.headers.setdefault(
-        "Content-Security-Policy",
-        "default-src 'self'; "
-        f"script-src 'self' 'nonce-{nonce}'; "
-        f"style-src 'self' 'nonce-{nonce}'; "
-        "img-src 'self' data: blob:; "
-        "connect-src 'self'; "
-        "font-src 'self'; "
-        "object-src 'none'; base-uri 'self'; form-action 'self'; "
-        "frame-ancestors 'none'")
-    if config.IS_PROD:
-        resp.headers.setdefault("Strict-Transport-Security",
-                                "max-age=31536000; includeSubDomains")
-    return resp
 
 
 def current_uid() -> int | None:
@@ -190,6 +180,7 @@ def index():
                            provider=llm.provider_name(),
                            model=llm.model_name(),
                            brand=config.BRAND_NAME,
+                           csrf_token=security.csrf_token(),
                            csp_nonce=g.csp_nonce)
 
 
@@ -229,7 +220,24 @@ def api_health():
         "billing": config.billing_configured(),
         "rate_limit_backend": security.backend_name(),
         "brand": config.BRAND_NAME,
+        "security": config.security_status(),
     })
+
+
+@app.route("/.well-known/security.txt")
+def security_txt():
+    """RFC 9116 contact info for security researchers.
+
+    Plain text, one field per line. The contact address is the operator's, set
+    via CONTACT_EMAIL -- there is no hard-coded mailbox to rot.
+    """
+    body = (
+        f"Contact: mailto:{config.CONTACT_EMAIL}\n"
+        f"Expires: {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(time.time() + 31536000))}\n"
+        "Preferred-Languages: ar, en\n"
+        "Canonical: /.well-known/security.txt\n"
+    )
+    return app.response_class(body, mimetype="text/plain")
 
 
 @app.route("/api/providers")
@@ -312,12 +320,17 @@ def api_signals_ingest():
 # -------------------------------------------------------------------- auth
 @app.route("/api/auth/register", methods=["POST"])
 def api_register():
+    if not security.allow(f"register:{client_ip()}"):
+        return jsonify({"error": "rate_limited",
+                        "detail": "too many requests, slow down"}), 429
     b = request.get_json(silent=True) or {}
     user = db.create_user(b.get("email", ""), b.get("password", ""))
     if not user:
         return jsonify({"error": "invalid_or_taken"}), 400
     session["uid"] = user["id"]
-    return jsonify({"user": user})
+    session.pop(security.CSRF_SESSION_KEY, None)  # rotate the token on privilege change
+    log.info("register ok ip=%s uid=%s", client_ip(), user["id"])
+    return jsonify({"user": user, "csrf": security.csrf_token()})
 
 
 @app.route("/api/auth/login", methods=["POST"])
@@ -333,26 +346,29 @@ def api_login():
         log.warning("login failed ip=%s email=%s", ip, b.get("email", ""))
         return jsonify({"error": "bad_credentials"}), 401
     security.record_success(f"login:{ip}")
+    session.clear()               # fresh session on privilege change
     session["uid"] = row["id"]
     log.info("login ok ip=%s uid=%s", ip, row["id"])
-    return jsonify({"user": {"id": row["id"], "email": row["email"], "plan": row["plan"]}})
+    return jsonify({"user": {"id": row["id"], "email": row["email"], "plan": row["plan"]},
+                    "csrf": security.csrf_token()})
 
 
 @app.route("/api/auth/logout", methods=["POST"])
 def api_logout():
-    session.pop("uid", None)
+    session.clear()
     return jsonify({"ok": True})
 
 
 @app.route("/api/me")
 def api_me():
     uid = current_uid()
+    tok = security.csrf_token()
     if uid is None:
-        return jsonify({"user": None})
+        return jsonify({"user": None, "csrf": tok})
     row = db.get_user(uid)
     if not row:
         session.pop("uid", None)
-        return jsonify({"user": None})
+        return jsonify({"user": None, "csrf": tok})
     quotas = {f: db.quota(uid, f) for f in db.FEATURE_LABEL}
     plan = db.effective_plan(row)
     return jsonify({"user": {"id": row["id"], "email": row["email"],
@@ -361,7 +377,8 @@ def api_me():
                              "days_left": db.days_left(row),
                              "active": db.plan_active(uid),
                              "auto_renew": db.auto_renewing(uid)},
-                    "quotas": quotas})
+                    "quotas": quotas,
+                    "csrf": tok})
 
 
 @app.route("/api/plan", methods=["POST"])

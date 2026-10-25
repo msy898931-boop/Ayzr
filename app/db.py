@@ -10,12 +10,26 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import secrets
 import sqlite3
 import time
 
+import config
+
 DB_PATH = os.environ.get("TRADLI_DB") or os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "..", "data", "tradli.db")
+
+# The passwords that top every breach list. Rejecting them costs nothing and
+# removes the weakest accounts before they exist. Kept short on purpose: a long
+# list is better handled by a breach-check service, not a hard-coded file.
+_COMMON_PASSWORDS = frozenset({
+    "password", "password1", "password123", "12345678", "123456789", "1234567890",
+    "qwerty123", "qwertyuiop", "11111111", "00000000", "iloveyou", "admin123",
+    "letmein1", "welcome1", "abc12345", "1q2w3e4r", "zaq12wsx", "qazwsxedc",
+    "asdfghjkl", "monkey123", "dragon123", "football", "baseball", "sunshine1",
+    "princess1", "superman1", "trustno1", "changeme", "passw0rd", "p@ssw0rd",
+})
 
 PLANS = {
     "free": {
@@ -168,9 +182,47 @@ def verify_pw(password: str, pw_hash: str, salt: str) -> bool:
 
 
 # ------------------------------------------------------------------- users
-def create_user(email: str, password: str) -> dict | None:
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def validate_email(email: str) -> str | None:
+    """Return the normalised email, or None when it is not acceptable.
+
+    Deliberately strict: a normalised (lower-cased) address with a single ``@``,
+    a dotted domain, and no whitespace. Reserved sample domains are refused so a
+    shipped ``.env.example`` credential cannot become a live account.
+    """
     email = (email or "").strip().lower()
-    if not email or "@" not in email or len(password or "") < 6:
+    if not _EMAIL_RE.match(email):
+        return None
+    domain = email.rsplit("@", 1)[1]
+    blocked = tuple(getattr(config, "BLOCKED_EMAIL_DOMAINS", ()) or ())
+    if domain in blocked or any(domain.endswith("." + b) for b in blocked):
+        return None
+    return email
+
+
+def password_problem(password: str) -> str | None:
+    """Return a short reason the password is unacceptable, or None if it is ok.
+
+    The rules are the cheap, high-value ones: a minimum length, not all one
+    character, and not on the common-password list. Messages are stable tokens
+    (not prose) so the UI can translate them.
+    """
+    pw = password or ""
+    min_len = int(getattr(config, "PASSWORD_MIN_LENGTH", 8) or 0)
+    if len(pw) < min_len:
+        return "too_short"
+    if len(set(pw)) < 3:
+        return "too_simple"
+    if pw.strip().lower() in _COMMON_PASSWORDS:
+        return "too_common"
+    return None
+
+
+def create_user(email: str, password: str) -> dict | None:
+    email = validate_email(email)
+    if email is None or password_problem(password):
         return None
     pw_hash, salt = hash_pw(password)
     try:
