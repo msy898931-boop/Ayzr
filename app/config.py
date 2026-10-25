@@ -22,7 +22,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-VERSION = "1.7.0"
+VERSION = "1.8.0"
 
 # The product name shown in the UI, page title and footer. Kept in config (not
 # hard-coded) so an operator can white-label without touching the template, and

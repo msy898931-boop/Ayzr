@@ -135,6 +135,25 @@ def test_quant_analyze_rejects_unknown_symbol(clean):
         clean["engine"].quant_analyze("FAKE", "H1")
 
 
+def test_quant_analyze_plan_is_risk_aware(clean, monkeypatch):
+    e, market = clean["engine"], clean["market"]
+    monkeypatch.setattr(market, "fetch", lambda s, tf="H1", bars=300: ohlc())
+    rich = e.quant_analyze("XAUUSD", "H1", account=1_000_000, risk_pct=1.0,
+                           explain=False)
+    assert rich["plan"]["stop_mode"] == "volatility"
+    assert rich["plan"]["feasible"] is True
+    assert rich["size"]["actual_pct"] <= 1.0
+
+
+def test_quant_analyze_flags_account_too_small(clean, monkeypatch):
+    e, market = clean["engine"], clean["market"]
+    monkeypatch.setattr(market, "fetch", lambda s, tf="H1", bars=300: ohlc())
+    tiny = e.quant_analyze("XAUUSD", "H1", account=20, risk_pct=1.0, explain=False)
+    assert tiny["plan"]["feasible"] is False
+    assert tiny["size"]["warning"]["level"] == "high"
+    assert tiny["plan"]["min_account_for_floor_stop"] > 20
+
+
 def test_quant_analyze_explains_when_model_available(clean, monkeypatch):
     e, market, llm = clean["engine"], clean["market"], clean["llm"]
     monkeypatch.setattr(market, "fetch", lambda s, tf="H1", bars=300: ohlc())

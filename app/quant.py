@@ -21,6 +21,11 @@ COST_PIPS = {
     "metal": 2.0, "fx": 1.4, "crypto": 30.0, "index": 1.5, "energy": 3.0,
 }
 
+# The broker's smallest tradable size and the volatility multiple for the stop.
+MIN_LOT = 0.01
+ATR_STOP_MULT = 1.5      # structural (volatility) stop
+MIN_STOP_ATR = 1.0       # never place a stop tighter than this: it is noise
+
 
 def _score_side(s: dict, side: str) -> tuple[int, list[dict]]:
     """Confluence score for one direction, plus the reasons behind it."""
@@ -104,39 +109,85 @@ def decide(s: dict) -> dict:
     }
 
 
-def plan(s: dict, decision: dict, meta: dict, rr: tuple = (1.0, 2.0, 3.0)) -> dict:
-    """Entry, ATR-based stop, three targets, risk:reward."""
+def plan(s: dict, decision: dict, meta: dict, rr: tuple = (1.0, 2.0, 3.0),
+         account: float = 200.0, risk_pct: float = 1.0) -> dict:
+    """Entry, stop and three targets.
+
+    The stop must sit beyond market noise, so its floor is 1x ATR. Above that
+    floor it is the widest distance that keeps a 0.01-lot trade inside
+    ``risk_pct`` of ``account``; a market-volatility stop (1.5x ATR) is also
+    computed and wins whenever it is tighter, so a funded account behaves as
+    before. Targets stay anchored to volatility, so the risk:reward is honest.
+    When the account is too small to fund a sane stop at 0.01 lots, the stop is
+    floored and the trade is flagged ``feasible=False`` with the balance that
+    *would* fit -- never a silent 20%-risk trade.
+    """
     price = s["price"]
     atr = s["atr14"] or price * 0.002
+    digits = meta["digits"]
+    pip = meta["pip"]
+    pip_value = meta["pip_value"]            # $ per pip per 1.0 lot
+    per_price = pip_value / pip              # $ per 1.0 price unit per 1.0 lot
     side = decision["side"]
+
+    vol_stop = ATR_STOP_MULT * atr
+    floor_stop = MIN_STOP_ATR * atr
+    risk_money = max(0.0, account) * max(0.0, risk_pct) / 100
+    budget_stop = (risk_money / (MIN_LOT * per_price)) if per_price > 0 else vol_stop
+    stop_dist = min(vol_stop, max(floor_stop, budget_stop))
+    feasible = budget_stop >= floor_stop
+
+    # Balance needed to fund each stop at 0.01 lots within the risk budget.
+    _lot_pip = MIN_LOT * pip_value
+    min_account = (round(floor_stop / pip * _lot_pip / (risk_pct / 100))
+                   if risk_pct else None)
+    min_account_vol = (round(vol_stop / pip * _lot_pip / (risk_pct / 100))
+                       if risk_pct else None)
+
+    base = {
+        "atr": atr,
+        "digits": digits,
+        "atr_stop": round(vol_stop, digits),
+        "atr_stop_pips": round(vol_stop / pip, 1),
+        "vol_stop_pips": round(vol_stop / pip, 1),
+        "floor_stop_pips": round(floor_stop / pip, 1),
+        "max_risk_money": round(risk_money, 2),
+        "min_account_for_floor_stop": min_account,
+        "min_account_for_vol_stop": min_account_vol,
+    }
     if decision["verdict"] == "WAIT":
-        return {"entry": None, "stop": None, "targets": None, "rr": None,
-                "atr": atr, "stop_pips": None}
+        return {**base, "entry": None, "stop": None, "targets": None, "rr": None,
+                "stop_pips": None, "risk_capped": False, "stop_mode": None,
+                "feasible": feasible}
 
     sign = 1 if side == "BUY" else -1
-    stop = price - sign * 1.5 * atr
-    targets = [price + sign * m * 1.5 * atr for m in rr]
+    stop = price - sign * stop_dist
+    targets = [price + sign * m * vol_stop for m in rr]
     risk = abs(price - stop)
     reward = abs(targets[1] - price)
-    pip = meta["pip"]
-    digits = meta["digits"]
+    risk_capped = stop_dist < vol_stop
+
     return {
+        **base,
         "entry": round(price, digits),
         "stop": round(stop, digits),
         "targets": [round(t, digits) for t in targets],
         "stop_pips": round(risk / pip, 1),
         "rr": round(reward / risk, 2) if risk else None,
-        "atr": atr,
-        "digits": digits,
+        "risk_capped": bool(risk_capped),
+        "stop_mode": "risk" if risk_capped else "volatility",
+        "feasible": feasible,
     }
 
 
 def size_position(account: float, risk_pct: float, trade: dict, meta: dict) -> dict:
     """Lots for a given account balance and risk percentage.
 
-    Brokers have a minimum lot (usually 0.01). When that floor forces more risk
-    than the user asked for, we say so plainly instead of hiding it -- on a
-    small account a wide stop can make a "1%" trade impossible.
+    ``plan`` already keeps the stop sane and flags ``feasible``; here we report
+    the size and, when the account cannot fund that stop at 0.01 lots, say
+    plainly that the minimum lot would risk too much and how much balance the
+    setup actually needs -- instead of hiding a 10%+ risk behind a normal-looking
+    "0.01".
     """
     risk_money = account * risk_pct / 100
     stop_pips = trade.get("stop_pips")
@@ -146,25 +197,28 @@ def size_position(account: float, risk_pct: float, trade: dict, meta: dict) -> d
                 "stop_pips": stop_pips, "warning": None}
 
     raw = risk_money / (stop_pips * pip_value)
-    min_lot = 0.01
-    lots = max(min_lot, round(raw, 2))
+    lots = max(MIN_LOT, round(raw, 2))
     actual_risk = round(lots * stop_pips * pip_value, 2)
     actual_pct = round(100 * actual_risk / account, 2) if account else None
 
     warning = None
-    if raw < min_lot:
+    if not trade.get("feasible", True):
+        need = trade.get("min_account_for_floor_stop")
+        need_txt = f"${need:,.0f}" if need else "—"
         warning = {
             "level": "high",
-            "ar": (f"الستوب واسع ({stop_pips:.0f} نقطة) — أصغر حجم (0.01 لوت) "
-                   f"يخاطر بـ{actual_pct}% من حسابك، أكثر من الحد المطلوب {risk_pct}%."),
-            "en": (f"Wide stop ({stop_pips:.0f} pips) — the minimum 0.01 lot risks "
-                   f"{actual_pct}% of your account, above your {risk_pct}% limit."),
+            "ar": (f"حسابك صغير على هذا السوق: أضيق ستوب منطقي ({stop_pips:.0f} نقطة) "
+                   f"يخاطر بـ{actual_pct}% بأصغر حجم. لا تدخل — هذا السوق يحتاج "
+                   f"رصيداً ≈ {need_txt} لمخاطرة {risk_pct}%."),
+            "en": (f"Account too small for this market: the tightest sane stop "
+                   f"({stop_pips:.0f} pips) risks {actual_pct}% at the minimum lot. "
+                   f"Stand down — this market needs ~{need_txt} to risk {risk_pct}%."),
         }
     elif actual_pct and actual_pct > risk_pct * 1.5:
         warning = {
             "level": "medium",
-            "ar": f"الخطر الفعلي {actual_pct}% أعلى من هدفك {risk_pct}% بسبب تقريب الحجم.",
-            "en": f"Actual risk {actual_pct}% exceeds your {risk_pct}% target due to lot rounding.",
+            "ar": f"الخطر الفعلي {actual_pct}% أعلى من هدفك {risk_pct}% بسبب أصغر حجم عقد مسموح.",
+            "en": f"Actual risk {actual_pct}% exceeds your {risk_pct}% target due to the minimum lot size.",
         }
 
     return {
@@ -174,7 +228,7 @@ def size_position(account: float, risk_pct: float, trade: dict, meta: dict) -> d
         "actual_pct": actual_pct,
         "stop_pips": stop_pips,
         "pip_value_per_lot": pip_value,
-        "min_lot_forced": raw < min_lot,
+        "min_lot_forced": raw < MIN_LOT,
         "warning": warning,
     }
 
@@ -198,7 +252,7 @@ def full_plan(symbol: str, snapshot: dict, meta: dict,
               account: float = 200.0, risk_pct: float = 1.0) -> dict:
     """One call: decide, plan, size, cost."""
     d = decide(snapshot)
-    p = plan(snapshot, d, meta)
+    p = plan(snapshot, d, meta, account=account, risk_pct=risk_pct)
     sz = size_position(account, risk_pct, p, meta) if p["entry"] else {
         "lots": None, "risk_money": account * risk_pct / 100, "stop_pips": None}
     c = cost_estimate(p, meta, sz["lots"]) if sz["lots"] else {"pips": None, "money": None}

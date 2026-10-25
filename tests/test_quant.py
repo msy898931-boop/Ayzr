@@ -117,14 +117,43 @@ def test_plan_sell_levels_are_ordered(mods):
     assert p["stop"] > p["entry"] > p["targets"][0] > p["targets"][1] > p["targets"][2]
 
 
-def test_plan_stop_uses_atr(mods):
+def test_plan_stop_uses_atr_when_account_can_afford_it(mods):
     q = mods["quant"]
     s = snapshot(price=110, ema20=108, ema50=105, ema200=100, rsi14=60, atr14=2.0,
                  macd={"macd": 1, "signal": 0.5, "hist": 0.5}, adx14=30,
                  bollinger={"mid": 105, "upper": 120, "lower": 90},
                  volume=130, volume_ratio=1.3)
-    p = q.plan(s, q.decide(s), META)
+    # A funded account: the volatility stop is well inside the risk budget.
+    p = q.plan(s, q.decide(s), META, account=1_000_000, risk_pct=1.0)
     assert abs((p["entry"] - p["stop"]) - 1.5 * 2.0) < 1e-6  # 1.5 * ATR
+    assert p["stop_mode"] == "volatility" and p["risk_capped"] is False
+
+
+def test_plan_caps_stop_to_the_risk_budget(mods):
+    """A small account gets a tighter stop, never a 10%+ risk trade."""
+    q = mods["quant"]
+    s = snapshot(price=110, ema20=108, ema50=105, ema200=100, rsi14=60, atr14=2.0,
+                 macd={"macd": 1, "signal": 0.5, "hist": 0.5}, adx14=30,
+                 bollinger={"mid": 105, "upper": 120, "lower": 90},
+                 volume=130, volume_ratio=1.3)
+    p = q.plan(s, q.decide(s), META, account=250, risk_pct=1.0)
+    dist = abs(p["entry"] - p["stop"])
+    assert p["risk_capped"] is True and p["stop_mode"] == "risk"
+    assert p["feasible"] is True
+    assert 1.0 * 2.0 <= dist <= 1.5 * 2.0          # inside the noise floor
+    assert p["rr"] >= 2.0                           # tighter stop, better RR
+
+
+def test_plan_flags_an_account_too_small_for_the_noise_floor(mods):
+    q = mods["quant"]
+    s = snapshot(price=110, ema20=108, ema50=105, ema200=100, rsi14=60, atr14=2.0,
+                 macd={"macd": 1, "signal": 0.5, "hist": 0.5}, adx14=30,
+                 bollinger={"mid": 105, "upper": 120, "lower": 90},
+                 volume=130, volume_ratio=1.3)
+    p = q.plan(s, q.decide(s), META, account=50, risk_pct=1.0)
+    assert p["feasible"] is False
+    assert abs((p["entry"] - p["stop"]) - 2.0) < 1e-6   # floored at 1x ATR
+    assert p["min_account_for_floor_stop"] > 50
 
 
 def test_plan_risk_reward_is_two(mods):
@@ -159,8 +188,18 @@ def test_size_warns_when_min_lot_exceeds_risk(mods):
     # A tiny account with a wide stop cannot honour 1% risk at 0.01 lots.
     sz = q.size_position(50.0, 1.0, {"stop_pips": 500.0}, META)
     assert sz["min_lot_forced"] is True
-    assert sz["warning"]["level"] == "high"
+    assert sz["warning"]["level"] == "medium"
     assert sz["lots"] == 0.01
+
+
+def test_size_stands_down_when_stop_is_infeasible(mods):
+    q = mods["quant"]
+    # plan() flags feasible=False; the size must say so loudly, not silently.
+    sz = q.size_position(400.0, 1.0,
+                         {"stop_pips": 300.0, "feasible": False,
+                          "min_account_for_floor_stop": 3000}, META)
+    assert sz["warning"]["level"] == "high"
+    assert "3,000" in sz["warning"]["en"] and "3,000" in sz["warning"]["ar"]
 
 
 def test_size_without_stop_is_safe(mods):

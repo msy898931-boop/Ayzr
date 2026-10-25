@@ -522,6 +522,10 @@ const I18N = {
     q_cost_pct:"التكلفة من الخطر",q_invalidation:"ما يُبطل السيناريو",q_explanation:"الشرح",
     q_support:"الدعم",q_resistance:"المقاومة",q_loading:"جارٍ قراءة السوق…",q_none:"لا توجد أداة محددة.",
     q_scan_empty:"لا نتائج بعد. اضغط \"امسح كل الأسواق\".",q_wait_note:"لا أفضليّة واضحة — الأفضل الانتظار.",
+    q_stop_mode_risk:"مضبوط على المخاطرة",q_stop_mode_vol:"ستوب التقلّب (ATR)",
+    q_stop_hint_risk:"الستوب محسوب ليخاطر {r}% من رصيدك بأصغر حجم (0.01 لوت).",
+    q_stop_hint_vol:"ستوب التقلّب أضيق من ميزانية المخاطرة، فهو المضبوط.",
+    q_not_feasible:"حسابك أصغر من أن يتحمّل هذا السوق بأمان — راجع التنبيه أدناه.",
     drop_msg:"اسحب صورة الشارت هنا أو اضغط للاختيار",lbl_symbol:"الرمز",lbl_tf:"الفريم",
     lbl_claim:"نص الإشارة / الادعاء (اختياري)",lbl_position:"تفاصيل صفقتك (اختياري)",lbl_mode:"وضع التحليل",
     mode_fast:"سريع (12 وكيل بمكالمة واحدة)",mode_full:"كامل (مكالمة لكل وكيل)",
@@ -585,6 +589,10 @@ const I18N = {
     q_cost_pct:"Cost vs risk",q_invalidation:"What invalidates it",q_explanation:"Explanation",
     q_support:"Support",q_resistance:"Resistance",q_loading:"Reading the market…",q_none:"No instrument selected.",
     q_scan_empty:'No results yet. Press "Scan all markets".',q_wait_note:"No clear edge — best to wait.",
+    q_stop_mode_risk:"Risk-based",q_stop_mode_vol:"Volatility stop (ATR)",
+    q_stop_hint_risk:"Stop sized to risk {r}% of your balance at the minimum lot (0.01).",
+    q_stop_hint_vol:"The volatility stop is tighter than the risk budget, so it is the one used.",
+    q_not_feasible:"Your account is too small to trade this market safely — see the alert below.",
     drop_msg:"Drag a chart image here or click to choose",lbl_symbol:"Symbol",lbl_tf:"Timeframe",
     lbl_claim:"Signal text / claim (optional)",lbl_position:"Your position details (optional)",lbl_mode:"Analysis mode",
     mode_fast:"Fast (12 agents, one call)",mode_full:"Full (one call per agent)",
@@ -780,16 +788,23 @@ function renderQuant(R){
       · ${t("agreement")||""}: <b>${d.score}/${d.max_score}</b></div>`;
   if(v==="WAIT") html+=`<p class="note">${t("q_wait_note")}</p>`;
   if(p.entry){
+    const stopTag = p.stop_mode==="risk"
+      ? `<span class="badge" style="background:rgba(124,92,255,.18);color:var(--accent)">${t("q_stop_mode_risk")}</span>`
+      : `<span class="badge" style="background:rgba(34,211,238,.15);color:var(--accent2)">${t("q_stop_mode_vol")}</span>`;
+    const stopHint = p.stop_mode==="risk"
+      ? t("q_stop_hint_risk").replace("{r}", fmt(R.risk_pct,2))
+      : t("q_stop_hint_vol");
     html+=`<div class="kv">
       <div><small>${t("entry")}</small><b>${fmt(p.entry,dg)}</b></div>
-      <div><small>${t("stop")} (${p.stop_pips} ${LANG==="ar"?"نقطة":"pips"})</small><b>${fmt(p.stop,dg)}</b></div>
+      <div><small>${t("stop")} (${p.stop_pips} ${LANG==="ar"?"نقطة":"pips"}) ${stopTag}</small><b>${fmt(p.stop,dg)}</b></div>
       <div><small>${t("targets")}</small><b>${(p.targets||[]).map(x=>fmt(x,dg)).join(" · ")}</b></div>
       <div><small>R:R</small><b>${p.rr??"—"}</b></div>
       <div><small>${t("q_lots")}</small><b>${sz.lots??"—"}</b></div>
       <div><small>${t("q_risk_money")}</small><b>$${fmt(sz.actual_risk)} (${fmt(sz.actual_pct,2)}%)</b></div>
       <div><small>${t("th_cost")}</small><b>$${fmt(c.money)}</b></div>
       <div><small>${t("q_cost_pct")}</small><b>${fmt(c.pct_of_risk,1)}%</b></div>
-    </div>`;
+    </div>
+    <p class="sub" style="font-size:12.5px;margin-top:8px">${stopHint}</p>`;
   }
   if(sz.warning) html+=`<p class="note" style="border-color:var(--down);color:var(--down)">⚠️ ${LANG==="ar"?sz.warning.ar:sz.warning.en}</p>`;
   html+=`<h3 style="margin:16px 0 4px;font-size:14px">${t("q_reasons")}</h3>${reasonsHtml(d.reasons)}`;
@@ -825,12 +840,15 @@ async function runScan(){
     if(!r.ok){ tb.innerHTML=`<tr><td colspan="9" class="err">${D.detail||t("error")}</td></tr>`; return; }
     tb.innerHTML=(D.results||[]).map(R=>{
       const d=R.decision,p=R.plan,sz=R.size,c=R.cost,dg=R.digits;
+      const risky = sz.warning && sz.warning.level==="high";
+      const lots = `${sz.lots??"—"}${risky?` <span title="${esc(LANG==="ar"?sz.warning.ar:sz.warning.en)}" style="color:var(--down)">⚠️</span>`:""}`;
+      const stop = p.stop?`${fmt(p.stop,dg)}${p.stop_mode==="risk"?' <small style="color:var(--accent)">R</small>':""}`:"—";
       return `<tr><td><b>${R.symbol}</b></td><td>${fmt(R.price,dg)}</td>
         <td><span class="pill ${d.verdict==="WAIT"?"":d.verdict}" style="${d.verdict==="WAIT"?"background:rgba(240,185,11,.15);color:var(--wait)":""}">${d.verdict}</span></td>
         <td>${d.confidence}%</td>
-        <td>${p.entry?fmt(p.entry,dg):"—"}</td><td>${p.stop?fmt(p.stop,dg):"—"}</td>
+        <td>${p.entry?fmt(p.entry,dg):"—"}</td><td>${stop}</td>
         <td>${p.targets?p.targets.map(x=>fmt(x,dg)).join(" / "):"—"}</td>
-        <td>${sz.lots??"—"}</td><td>${c.money!=null?"$"+fmt(c.money):"—"}</td></tr>`;
+        <td>${lots}</td><td>${c.money!=null?"$"+fmt(c.money):"—"}</td></tr>`;
     }).join("") || `<tr><td colspan="9">${t("q_scan_empty")}</td></tr>`;
   }catch(e){ tb.innerHTML=`<tr><td colspan="9" class="err">${t("error")}</td></tr>`; }
 }

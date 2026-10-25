@@ -46,9 +46,13 @@ it** (`config.secret_key()` raises SystemExit). `wsgi.py` is the gunicorn entry.
   aggregated for H4. Results cached 60s. Requires outbound network. Metals
   (XAUUSD/XAGUSD) are additionally anchored to a live *spot* feed -- see the
   gotcha below.
-- `app/quant.py`    — transparent rules: confluence score per side, ATR stop,
-  3 targets, position sizing, cost estimate. `size_position` emits a warning
-  when the broker minimum lot (0.01) forces more risk than the user asked.
+- `app/quant.py`    — transparent rules: confluence score per side, stop,
+  3 targets, position sizing, cost estimate. The stop is *risk-based*: it is
+  floored at 1x ATR (never inside market noise) and capped at the distance a
+  0.01-lot trade can take inside the requested risk %; the tighter of that and
+  the 1.5x-ATR volatility stop wins, and `stop_mode` records which. When even
+  the floored stop needs more than the budget, `feasible=False` and
+  `size_position` says plainly how much balance the market needs.
 - `app/agents.py`   — the 12 agents (single source of truth; used by prompts,
   demo engine and UI). 11 specialists + `chief`.
 - `app/engine.py`   — analyze / verify / advise / zones (vision) AND

@@ -37,7 +37,7 @@ def test_health(client):
     assert body["agents"] == 12
     assert body["live"] is False  # no key configured in tests
     assert body["env"] == "development"
-    assert body["version"] == "1.7.0"
+    assert body["version"] == "1.8.0"
 
 
 def test_index_renders(client):
