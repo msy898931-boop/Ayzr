@@ -529,6 +529,7 @@ const I18N = {
     q_stop_hint_vol:"ستوب التقلّب أضيق من ميزانية المخاطرة، فهو المضبوط.",
     q_stop_hint_struct:"الستوب تحت أقرب دعم (للشراء) أو فوق أقرب مقاومة (للبيع) مع هامش أمان صغير.",
     q_stop_hint_level_wide:"المستوى الهيكلي أوسع ({p} نقطة) لكنه يتجاوز ميزانية المخاطرة.",
+    q_manual_note:"🔒 إرشاد فقط — نفّذ يدوياً. المنصة لا ترسل أوامر للتداول.",
     q_not_feasible:"حسابك أصغر من أن يتحمّل هذا السوق بأمان — راجع التنبيه أدناه.",
     drop_msg:"اسحب صورة الشارت هنا أو اضغط للاختيار",lbl_symbol:"الرمز",lbl_tf:"الفريم",
     lbl_claim:"نص الإشارة / الادعاء (اختياري)",lbl_position:"تفاصيل صفقتك (اختياري)",lbl_mode:"وضع التحليل",
@@ -599,6 +600,7 @@ const I18N = {
     q_stop_hint_vol:"The volatility stop is tighter than the risk budget, so it is the one used.",
     q_stop_hint_struct:"Stop sits under the nearest support (long) or over the nearest resistance (short), with a small safety buffer.",
     q_stop_hint_level_wide:"The structural level is wider ({p} pips) but exceeds the risk budget.",
+    q_manual_note:"🔒 Guidance only — execute manually. The platform never sends trade orders.",
     q_not_feasible:"Your account is too small to trade this market safely — see the alert below.",
     drop_msg:"Drag a chart image here or click to choose",lbl_symbol:"Symbol",lbl_tf:"Timeframe",
     lbl_claim:"Signal text / claim (optional)",lbl_position:"Your position details (optional)",lbl_mode:"Analysis mode",
@@ -848,7 +850,8 @@ function renderQuant(R){
       <div><small>${t("th_cost")}</small><b>$${fmt(c.money)}</b></div>
       <div><small>${t("q_cost_pct")}</small><b>${fmt(c.pct_of_risk,1)}%</b></div>
     </div>
-    <p class="sub" style="font-size:12.5px;margin-top:8px">${stopHint}</p>`;
+    <p class="sub" style="font-size:12.5px;margin-top:8px">${stopHint}</p>
+    <p class="sub" style="font-size:12px;margin-top:4px;color:var(--muted)">${t("q_manual_note")}</p>`;
   }
   if(sz.warning) html+=`<p class="note" style="border-color:var(--down);color:var(--down)">⚠️ ${LANG==="ar"?sz.warning.ar:sz.warning.en}</p>`;
   html+=`<h3 style="margin:16px 0 4px;font-size:14px">${t("q_reasons")}</h3>${reasonsHtml(d.reasons)}`;

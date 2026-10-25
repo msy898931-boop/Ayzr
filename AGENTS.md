@@ -1,10 +1,15 @@
 # AGENTS.md — Aurora Markets platform
 
 ## What this is
-A from-scratch, honest AI market-analysis platform (brand is configurable via AI chart
-analysis, signal fraud detection, position advisor, supply/demand zones —
+A from-scratch, honest AI market-analysis platform (brand is configurable via
 BRAND_NAME). AI chart analysis, signal fraud detection, position advisor and
 supply/demand zones through a 12-agent roster, bilingual (AR/EN, RTL) UI.
+
+**Advisory only -- never auto-trades.** The product analyses charts, signals and
+positions and shows a plan (entry/stop/targets/size/cost) for a *human* to act
+on. It deliberately has no MT5/broker integration and never places an order: no
+`order_send`, no execution endpoint, no trade keys. Keep it that way. The stop
+and size figures are guidance, not an instruction to trade.
 
 ## Run
 ```
