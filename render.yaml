@@ -29,7 +29,7 @@ services:
         sync: false
       - key: OPENROUTER_API_KEY
         sync: false
-      # Contact address used by /legal and /.well-known/security.txt.
+      # Contact address used by /terms, /privacy and /.well-known/security.txt.
       - key: CONTACT_EMAIL
         sync: false
     disk:
