@@ -154,10 +154,10 @@ def fetch(symbol: str, timeframe: str = "H1", bars: int = 300) -> dict:
 
     meta = SYMBOLS.get(symbol.upper())
     if not meta:
-        raise MarketError(f"unknown symbol: {symbol}")
+        raise MarketError("unknown symbol")
     tf = TIMEFRAMES.get(timeframe.upper())
     if not tf:
-        raise MarketError(f"unknown timeframe: {timeframe}")
+        raise MarketError("unknown timeframe")
     if requests is None:
         raise MarketError("requests is not installed")
 

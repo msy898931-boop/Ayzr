@@ -818,14 +818,14 @@ async function runQuant(){
 }
 function renderQuant(R){
   const d=R.decision, p=R.plan, sz=R.size, c=R.cost, ind=R.indicators, dg=R.digits;
-  const v=d.verdict;
+  const v=esc(d.verdict);
   let html=`<div style="display:flex;justify-content:space-between;align-items:center">
-    <span class="sub" style="margin:0">${R.symbol} · ${R.timeframe} · ${R.label}</span>
+    <span class="sub" style="margin:0">${esc(R.symbol)} · ${esc(R.timeframe)} · ${esc(R.label)}</span>
     <span class="badge live">${t("q_data")}</span></div>
     <div class="verdict v-${v}">${v}</div>
-    <div style="color:var(--muted);font-size:13.5px">${t("confidence")}: <b>${d.confidence}%</b>
+    <div style="color:var(--muted);font-size:13.5px">${t("confidence")}: <b>${esc(d.confidence)}%</b>
       · ${t("price")}: <b>${fmt(R.price,dg)}</b>
-      · ${t("agreement")||""}: <b>${d.score}/${d.max_score}</b></div>`;
+      · ${t("agreement")||""}: <b>${esc(d.score)}/${esc(d.max_score)}</b></div>`;
   if(v==="WAIT") html+=`<p class="note">${t("q_wait_note")}</p>`;
   if(p.entry){
     const stopTag = p.stop_mode==="risk"
@@ -888,13 +888,13 @@ async function runScan(){
     tb.innerHTML=(D.results||[]).map(R=>{
       const d=R.decision,p=R.plan,sz=R.size,c=R.cost,dg=R.digits;
       const risky = sz.warning && sz.warning.level==="high";
-      const lots = `${sz.lots??"—"}${risky?` <span title="${esc(LANG==="ar"?sz.warning.ar:sz.warning.en)}" style="color:var(--down)">⚠️</span>`:""}`;
+      const lots = `${esc(sz.lots??"—")}${risky?` <span title="${esc(LANG==="ar"?sz.warning.ar:sz.warning.en)}" style="color:var(--down)">⚠️</span>`:""}`;
       const stopMark = p.stop_mode==="risk" ? ' <small style="color:var(--accent)">R</small>'
         : p.stop_mode==="structure" ? ' <small style="color:var(--up)">S</small>' : "";
       const stop = p.stop?`${fmt(p.stop,dg)}${stopMark}`:"—";
-      return `<tr><td><b>${R.symbol}</b></td><td>${fmt(R.price,dg)}</td>
-        <td><span class="pill ${d.verdict==="WAIT"?"":d.verdict}" style="${d.verdict==="WAIT"?"background:rgba(240,185,11,.15);color:var(--wait)":""}">${d.verdict}</span></td>
-        <td>${d.confidence}%</td>
+      return `<tr><td><b>${esc(R.symbol)}</b></td><td>${fmt(R.price,dg)}</td>
+        <td><span class="pill ${d.verdict==="WAIT"?"":esc(d.verdict)}" style="${d.verdict==="WAIT"?"background:rgba(240,185,11,.15);color:var(--wait)":""}">${esc(d.verdict)}</span></td>
+        <td>${esc(d.confidence)}%</td>
         <td>${p.entry?fmt(p.entry,dg):"—"}</td><td>${stop}</td>
         <td>${p.targets?p.targets.map(x=>fmt(x,dg)).join(" / "):"—"}</td>
         <td>${lots}</td><td>${c.money!=null?"$"+fmt(c.money):"—"}</td></tr>`;
@@ -910,15 +910,15 @@ function render(feat, R){
   return renderZones(R);
 }
 function renderAnalyze(R){
-  const dir=R.direction||"WAIT";
+  const dir=esc(R.direction||"WAIT");
   let html = `<div style="display:flex;justify-content:space-between;align-items:center">
     <span class="sub" style="margin:0">${t("direction")}</span>${badge(R.live)}</div>
     <div class="verdict v-${dir}">${dir}</div>
-    <div style="color:var(--muted);font-size:13.5px">${t("confidence")}: <b>${R.confidence??"—"}%</b> · ${t("trend")}: <b>${R.trend||"—"}</b>${R.agreement?` · ${t("agreement")}: <b>${R.agreement.with}/${R.agreement.of}</b>`:""}</div>
+    <div style="color:var(--muted);font-size:13.5px">${t("confidence")}: <b>${esc(R.confidence??"—")}%</b> · ${t("trend")}: <b>${esc(R.trend||"—")}</b>${R.agreement?` · ${t("agreement")}: <b>${esc(R.agreement.with)}/${esc(R.agreement.of)}</b>`:""}</div>
     <div class="kv">
-      <div><small>${t("entry")}</small><b>${R.entry??"—"}</b></div>
-      <div><small>${t("stop")}</small><b>${R.stop??"—"}</b></div>
-      <div><small>${t("targets")}</small><b>${(R.targets||[]).join(" · ")||"—"}</b></div>
+      <div><small>${t("entry")}</small><b>${esc(R.entry??"—")}</b></div>
+      <div><small>${t("stop")}</small><b>${esc(R.stop??"—")}</b></div>
+      <div><small>${t("targets")}</small><b>${esc((R.targets||[]).join(" · "))||"—"}</b></div>
       <div><small>${t("summary")}</small><b style="font-size:13px;font-weight:500">${esc(LANG==="ar"?R.summary_ar:R.summary_en)}</b></div>
     </div>`;
   if(R.agents&&R.agents.length){

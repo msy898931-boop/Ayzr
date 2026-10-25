@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import re
 import secrets
@@ -179,6 +180,12 @@ def hash_pw(password: str, salt: str | None = None) -> tuple[str, str]:
 def verify_pw(password: str, pw_hash: str, salt: str) -> bool:
     h, _ = hash_pw(password, salt)
     return secrets.compare_digest(h, pw_hash)
+
+
+# A fixed hash used only to spend the same PBKDF2 work when an email is not
+# found. Without it, a missing account answers noticeably faster than a wrong
+# password, which turns sign-in into a user-enumeration oracle.
+DUMMY_PW_HASH, DUMMY_PW_SALT = hash_pw("timing-equalizer-not-a-real-password")
 
 
 # ------------------------------------------------------------------- users
@@ -470,14 +477,17 @@ def add_signal(channel: str, symbol: str, direction: str, entry: float | None,
     tgts = []
     for t in (targets or [])[:5]:
         try:
-            tgts.append(float(t))
+            v = float(t)
         except (TypeError, ValueError):
             continue
+        if math.isfinite(v):
+            tgts.append(v)
     def _num(v):
         try:
-            return float(v) if v not in (None, "") else None
+            f = float(v) if v not in (None, "") else None
         except (TypeError, ValueError):
             return None
+        return f if f is not None and math.isfinite(f) else None
     now = time.time()
     with connect() as con:
         cur = con.execute(

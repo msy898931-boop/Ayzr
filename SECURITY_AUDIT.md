@@ -5,7 +5,7 @@ dependencies, and the git history. Method: manual review of every route and
 input, static analysis (`bandit`), dependency scan (`pip-audit`), and live
 black-box probes against the running server.
 
-Date: 2026-10-25
+Date: 2026-10-25 (second pass)
 
 ## Summary
 
@@ -15,10 +15,52 @@ comparisons, CSRF + Content-Type guards, a nonce-based CSP, PBKDF2 password
 hashing, login lockout, and a strict secret-redaction logger. No SQL injection,
 command injection, path traversal, SSRF, or authentication-bypass was found.
 
-Three real issues were found and fixed, all reflected-input / abuse related.
-No High or Critical finding is open.
+Seven issues were found and fixed across two passes, all reflected-input,
+output-escaping or abuse related. No High or Critical finding is open.
 
-## Fixed findings
+## Fixed findings (second pass)
+
+### 4. Reflected XSS, second vector — Medium
+
+The first-pass fix made `/api/quant` return a generic message for an unknown
+symbol, but `market.fetch()` raised `MarketError(f"unknown timeframe: {timeframe}")`
+with the caller's raw value, and `/api/quant` returns that `str(exc)` verbatim in
+`detail`. A request with a *valid* symbol and a crafted timeframe
+(`/api/quant?symbol=XAUUSD&timeframe=<img src=x onerror=...>`) still reflected
+markup. `market.fetch` now raises fixed strings (`"unknown timeframe"`), so no
+caller input reaches the message. Regression test:
+`test_quant_bad_timeframe_does_not_echo_it`.
+
+### 5. Unescaped model output in the UI — Medium
+
+`renderAnalyze`, `renderQuant` and the scan table interpolated **model- and
+provider-supplied** fields straight into `innerHTML`: `direction`, `trend`,
+`confidence`, `entry`, `stop`, `targets` (analyze), `symbol`, `timeframe`,
+`label`, `verdict`, `score`, `lots` (quant/scan). The `_merge()` overlay copies
+any model key into the payload, so a chart, caption, or hostile provider reply
+could carry markup into the page. Every one of these fields is now passed through
+`esc()` at the sink.
+
+### 6. User enumeration by login timing — Low/Medium
+
+`api_login` skipped the PBKDF2 check entirely when the email was unknown, so a
+missing account answered in microseconds while a wrong password spent ~120k
+iterations. That is a reliable oracle for which emails are registered. Login now
+verifies against a fixed `db.DUMMY_PW_HASH` on the unknown-email path, so both
+outcomes cost the same. Regression test:
+`test_login_hashes_even_when_the_email_is_unknown`.
+
+### 7. `NaN`/`Infinity` in JSON — Low
+
+`float("nan")`/`float("inf")` parse successfully, so `/api/quant` and `/api/scan`
+accepted `account=nan`/`risk=inf` and propagated them into the plan maths. Flask
+then serialised the non-finite results as bare `NaN`/`Infinity` tokens, which are
+invalid JSON and break the client's `JSON.parse`. `_num()` now rejects
+non-finite input and clamps to a sane range, and `db.add_signal` drops
+non-finite entry/stop/targets the same way. Regression test:
+`test_quant_rejects_non_finite_numbers`.
+
+## Fixed findings (first pass)
 
 ### 1. Reflected XSS via error `detail` — Medium
 

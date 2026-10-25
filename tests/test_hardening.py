@@ -276,3 +276,50 @@ def test_providers_is_rate_limited(client, clean):
     assert 429 in codes
 
 
+def test_quant_bad_timeframe_does_not_echo_it(client, clean):
+    """A valid symbol with a bogus timeframe must not reflect the timeframe."""
+    payload = "<script>alert(1)</script>"
+    r = client.get(f"/api/quant?symbol=XAUUSD&timeframe={payload}")
+    assert r.status_code in (400, 502)
+    body = r.get_data(as_text=True)
+    assert "<script" not in body
+    assert payload not in body
+
+
+def test_quant_rejects_non_finite_numbers(client, clean, monkeypatch):
+    """nan/inf parse as floats but serialise to invalid JSON, so they are refused."""
+    from test_engine import ohlc
+    monkeypatch.setattr(clean["market"], "fetch",
+                        lambda s, tf="H1", bars=300: ohlc())
+    r = client.get("/api/quant?symbol=XAUUSD&timeframe=H1&account=nan&risk=inf")
+    body = r.get_data(as_text=True)
+    assert r.status_code == 200
+    assert "NaN" not in body and "Infinity" not in body
+
+
+def test_login_hashes_even_when_the_email_is_unknown(clean, monkeypatch):
+    """A missing account must cost the same PBKDF2 work as a wrong password,
+    otherwise response time leaks which emails are registered."""
+    server, db = clean["server"], clean["db"]
+    calls = {"n": 0}
+    real = db.verify_pw
+
+    def counting(pw, h, s):
+        calls["n"] += 1
+        return real(pw, h, s)
+
+    monkeypatch.setattr(db, "verify_pw", counting)
+    server.app.config["TESTING"] = True
+    from flask.testing import FlaskClient
+    server.app.test_client_class = FlaskClient
+    with server.app.test_client() as c:
+        with c.session_transaction() as sess:
+            sess["_csrf"] = "tok"
+        r = c.post("/api/auth/login", json={"email": "nobody@tradli.io",
+                                            "password": "whatever"},
+                   headers={"X-CSRF-Token": "tok"})
+    assert r.status_code == 401
+    assert calls["n"] == 1
+
+
+

@@ -21,6 +21,7 @@ Run:  PORT=8000 python app/server.py
 from __future__ import annotations
 
 import json
+import math
 import os
 import secrets
 import sys
@@ -356,7 +357,14 @@ def api_login():
         return jsonify({"error": "locked", "retry_after": wait}), 429
     b = request.get_json(silent=True) or {}
     row = db.get_user_by_email(b.get("email", ""))
-    if not row or not db.verify_pw(b.get("password", ""), row["pw_hash"], row["salt"]):
+    if not row:
+        # Spend the same PBKDF2 work as a real check, so a missing account is not
+        # distinguishable from a wrong password by response time.
+        db.verify_pw(b.get("password", ""), db.DUMMY_PW_HASH, db.DUMMY_PW_SALT)
+        security.record_failure(f"login:{ip}")
+        log.warning("login failed ip=%s email=%s", ip, b.get("email", ""))
+        return jsonify({"error": "bad_credentials"}), 401
+    if not db.verify_pw(b.get("password", ""), row["pw_hash"], row["salt"]):
         security.record_failure(f"login:{ip}")
         log.warning("login failed ip=%s email=%s", ip, b.get("email", ""))
         return jsonify({"error": "bad_credentials"}), 401
@@ -599,8 +607,8 @@ def api_quant():
         return jsonify({"error": "rate_limited"}), 429
     symbol = request.args.get("symbol", "XAUUSD")
     timeframe = request.args.get("timeframe", "H1")
-    account = _num("account", 200.0)
-    risk = _num("risk", 1.0)
+    account = _num("account", 200.0, 1.0, 1e9)
+    risk = _num("risk", 1.0, 0.01, 100.0)
     try:
         return jsonify(engine.quant_analyze(symbol, timeframe, account, risk))
     except market.MarketError as exc:
@@ -623,19 +631,28 @@ def api_scan():
     if timeframe.upper() not in market.TIMEFRAMES:
         return jsonify({"error": "bad_timeframe",
                         "detail": "unknown timeframe"}), 400
-    account = _num("account", 200.0)
-    risk = _num("risk", 1.0)
+    account = _num("account", 200.0, 1.0, 1e9)
+    risk = _num("risk", 1.0, 0.01, 100.0)
     try:
         return jsonify(engine.quant_scan(timeframe, account, risk))
     except market.MarketError as exc:
         return jsonify({"error": "market", "detail": str(exc)}), 502
 
 
-def _num(name: str, default: float) -> float:
+def _num(name: str, default: float, lo: float, hi: float) -> float:
+    """A finite number from the query string, clamped to [lo, hi].
+
+    ``float("nan")``/``float("inf")`` parse successfully but propagate through
+    the plan maths into ``NaN``/``Infinity`` JSON, which is invalid and breaks
+    the client, so non-finite values fall back to the default.
+    """
     try:
-        return float(request.args.get(name, default))
+        v = float(request.args.get(name, default))
     except (TypeError, ValueError):
         return default
+    if not math.isfinite(v):
+        return default
+    return max(lo, min(hi, v))
 
 
 @app.errorhandler(413)
