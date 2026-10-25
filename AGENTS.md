@@ -156,6 +156,20 @@ redeploy. CI builds and health-checks the image (`docker` job).
   by anything in the URL or JSON fields. We parse the raw bytes ourselves
   (providers sometimes omit the JSON content type) and compare with
   `hmac.compare_digest`, with a timestamp window to stop replay.
+- Never log a caller-controlled value raw. A `provider` of `evil\nadmin=granted`
+  or a login `email` with a newline forges a second line in the audit log
+  (CWE-117). `security.redact()` strips C0 control chars and masks secrets; every
+  `server.py` log call wraps its fields in it. Add a log call -> redact it.
+- Rate limiting must be one atomic step. `count(...) >= limit` followed by a
+  separate `add(...)` lets a parallel burst read the same count and all pass;
+  `security.allow()` now calls `backend.hit(key, window, limit)`, which records
+  and decides under one lock (memory) or in one `INCR` (Redis).
+- `/api/health` is unauthenticated: do not put "is feature X enabled?" flags or
+  a list of configured providers in it. That is a free attack-surface map.
+  Return only what the UI needs plus a defensive-posture summary.
+- Any `/api/*` response that depends on the session (CSRF token, plan,
+  invoices) must send `Cache-Control: no-store`, or an intermediary may cache
+  it.
 - `.env` was once written with a typo'd key (missing char -> 401). When a key
   fails, compare length + bytes against the source before blaming the provider.
 - Everything the model, a signal feed or a user can influence is rendered with
