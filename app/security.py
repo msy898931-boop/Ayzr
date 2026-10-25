@@ -66,6 +66,23 @@ class _MemoryBackend:
             self._hits[key] = hits
             return len(hits)
 
+    def hit(self, key: str, window: int, limit: int) -> bool:
+        """Atomically record one request and say whether it is within budget.
+
+        Counting and recording in one locked step closes the race where two
+        concurrent requests both read ``count < limit`` and both pass, letting a
+        parallel burst exceed the configured rate.
+        """
+        now = time.time()
+        with self._lock:
+            hits = [t for t in self._hits.get(key, []) if now - t < window]
+            if len(hits) >= limit:
+                self._hits[key] = hits
+                return False
+            hits.append(now)
+            self._hits[key] = hits
+            return True
+
     def clear(self, key: str) -> None:
         with self._lock:
             self._hits.pop(key, None)
@@ -123,6 +140,17 @@ class _RedisBackend:
         except Exception:  # noqa: BLE001
             return self._fallback.add(key, window)
 
+    def hit(self, key: str, window: int, limit: int) -> bool:
+        """Atomic INCR-and-compare: the whole budget check is one round trip."""
+        try:
+            k = self._key(key)
+            n = int(self._r.incr(k))
+            if n == 1:
+                self._r.expire(k, window)
+            return n <= limit
+        except Exception:  # noqa: BLE001
+            return self._fallback.hit(key, window, limit)
+
     def clear(self, key: str) -> None:
         try:
             self._r.delete(self._key(key))
@@ -178,11 +206,12 @@ def backend_name() -> str:
 
 # ------------------------------------------------------------ rate limiting
 def allow(key: str) -> bool:
-    """True if `key` is within its request budget; records the hit if so."""
-    if _backend.count(key, config.RATE_LIMIT_WINDOW) >= config.RATE_LIMIT_CALLS:
-        return False
-    _backend.add(key, config.RATE_LIMIT_WINDOW)
-    return True
+    """True if `key` is within its request budget; records the hit if so.
+
+    The check-and-record is a single atomic operation on the backend, so a
+    parallel burst cannot slip past the limit through a read/modify race.
+    """
+    return _backend.hit(key, config.RATE_LIMIT_WINDOW, config.RATE_LIMIT_CALLS)
 
 
 # --------------------------------------------------------- login throttling
@@ -229,10 +258,20 @@ _SECRET_PATTERNS = (
 
 _REDACTED = "***"
 
+# CR/LF (and other control characters) let a caller forge extra log lines or
+# rewrite what an operator sees: a "provider" of "evil\nadmin=granted" would
+# inject a second, fake entry into the audit trail. Strip them everywhere a
+# caller-controlled value reaches a log line.
+_CONTROL = re.compile(r"[\x00-\x1f\x7f]")
+
 
 def redact(text) -> str:
-    """Return `text` with anything that looks like a secret masked."""
-    out = str(text)
+    """Return `text` with anything that looks like a secret masked.
+
+    Control characters are removed too, so a value can never break out of its
+    single log line (log forging / CWE-117).
+    """
+    out = _CONTROL.sub("", str(text))
     for pat in _SECRET_PATTERNS:
         out = pat.sub(lambda m: (m.group(1) + _REDACTED) if m.groups() else _REDACTED,
                       out)
@@ -392,7 +431,7 @@ def init_app(app) -> None:
     headers. Called once from ``server.py``; keeping it here means the app file
     does not carry the policy text.
     """
-    from flask import g
+    from flask import g, request
 
     @app.before_request
     def _security_context():  # noqa: ANN202 - Flask view
@@ -401,6 +440,11 @@ def init_app(app) -> None:
 
     @app.after_request
     def _security_headers(resp):  # noqa: ANN001, ANN202 - Flask response
-        return apply_security_headers(resp, getattr(g, "csp_nonce", ""))
+        resp = apply_security_headers(resp, getattr(g, "csp_nonce", ""))
+        # API responses carry session-scoped data (the CSRF token, the user's
+        # plan, their invoices). A shared or proxy cache must never keep a copy.
+        if request.path.startswith("/api/"):
+            resp.headers.setdefault("Cache-Control", "no-store")
+        return resp
 
 

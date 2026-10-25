@@ -25,6 +25,36 @@ def test_memory_backend_enforces_budget(mods, monkeypatch):
     assert sec.allow("ip:5.6.7.8") is True
 
 
+def test_rate_limit_is_atomic_under_concurrency(mods, monkeypatch):
+    """A parallel burst must not exceed the budget through a check/add race.
+
+    With a non-atomic "read count, then add" the threads can all observe the
+    same count and all pass. The backend now records and decides in one step.
+    """
+    import threading
+
+    sec = mods["security"]
+    cfg = mods["config"]
+    monkeypatch.setattr(cfg, "RATE_LIMIT_CALLS", 50)
+    monkeypatch.setattr(cfg, "RATE_LIMIT_WINDOW", 60)
+    sec.reset()
+
+    allowed: list[bool] = []
+    lock = threading.Lock()
+
+    def worker():
+        ok = sec.allow("ip:race")
+        with lock:
+            allowed.append(ok)
+
+    threads = [threading.Thread(target=worker) for _ in range(400)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert sum(allowed) == 50  # exactly the budget, never more
+
+
 def test_login_lockout_after_max_attempts(mods, monkeypatch):
     sec = mods["security"]
     cfg = mods["config"]

@@ -171,6 +171,25 @@ def test_log_event_redacts_values(clean, caplog):
     assert "charge" in caplog.text
 
 
+def test_redact_strips_log_forging_characters(clean):
+    """CR/LF in a caller value must not be able to forge a second log line."""
+    s = clean["security"]
+    out = s.redact("evil\nadmin=granted\r\nINJECTED")
+    assert "\n" not in out and "\r" not in out
+    assert "INJECTED" in out  # kept, but on the same, single line
+    # A NUL or other control byte is removed too.
+    assert "\x00" not in s.redact("a\x00b")
+
+
+def test_login_cannot_forge_a_log_line(client, clean, caplog):
+    """A newline in the login email must not forge a second audit entry."""
+    import logging as _logging
+    with caplog.at_level(_logging.WARNING, logger="app"):
+        client.post("/api/auth/login",
+                    json={"email": "a@b.com\nadmin=granted", "password": "nope12345"})
+    assert "\nadmin=granted" not in caplog.text
+
+
 # ---------------------------------------------------------------- headers
 def test_security_headers_include_the_new_ones(client):
     h = client.get("/").headers

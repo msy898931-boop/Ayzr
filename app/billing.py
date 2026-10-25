@@ -27,6 +27,7 @@ import hashlib
 import hmac
 import json
 import time
+import urllib.parse
 import urllib.request
 
 import config
@@ -190,17 +191,22 @@ def provider_cancel(provider_sub: str) -> bool:
     anyway (never take money and deny service) -- so a failed call here can only
     ever mean one extra charge that we refund, never a silently broken account.
     """
-    if not provider_sub or not config.PAYMENT_CANCEL_URL:
+    url = config.PAYMENT_CANCEL_URL
+    if not provider_sub or not url:
+        return False
+    # The URL is operator-configured, not caller-supplied, but pin the scheme so
+    # a misconfiguration can never turn this into a file:/ or gopher: read.
+    if urllib.parse.urlsplit(url).scheme not in ("http", "https"):
         return False
     try:
         req = urllib.request.Request(
-            config.PAYMENT_CANCEL_URL,
+            url,
             data=json.dumps({"subscription": provider_sub}).encode(),
             headers={"Content-Type": "application/json",
                      "Authorization": f"Bearer {config.PAYMENT_KEY}"},
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=5) as resp:
+        with urllib.request.urlopen(req, timeout=5) as resp:  # nosec B310 - scheme pinned above
             return 200 <= resp.status < 300
     except Exception:  # noqa: BLE001 - a provider failure must never break cancel
         return False

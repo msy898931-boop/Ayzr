@@ -9,6 +9,17 @@ The current version is defined once, in `app/config.py` (`VERSION`).
 ## [Unreleased]
 
 ### Security
+- Log injection (CWE-117): caller-controlled values (the webhook `<provider>`
+  path segment, a failed-login `email`) were logged verbatim, so a value with a
+  newline could forge an extra line in the audit log. `security.redact()` now
+  strips control characters and every `server.py` log call redacts its fields.
+- `/api/health` no longer enumerates the attack surface (which providers are
+  configured, whether admin/ingest/billing/webhook are enabled); it returns only
+  what the UI needs plus a defensive-posture summary.
+- All `/api/*` responses now send `Cache-Control: no-store`, so session-scoped
+  data (CSRF token, plan, invoices) cannot be cached by an intermediary.
+- Rate limiting is now a single atomic check-and-record, closing a read/modify
+  race that let a parallel burst briefly exceed the configured limit.
 - Fixed a reflected XSS: `/api/quant` and `/api/scan` echoed the caller's
   `symbol`/`timeframe` in the error `detail`, which the UI interpolated into
   `innerHTML`. The front end now escapes every error `detail`, and the server

@@ -186,12 +186,13 @@ def secret_key() -> str:
 
 
 def security_status() -> dict:
-    """A single, honest summary of what protection is actually on right now.
+    """A summary of the *defensive* posture, safe to serve on a public endpoint.
 
-    Surfaced by ``/api/health`` so an operator (or a monitoring probe) can see,
-    at a glance, which layers are enabled and which are still on their insecure
-    development default. Every value here is a *setting*, not a claim: nothing
-    is reported as on unless the corresponding code path is active.
+    ``/api/health`` is unauthenticated, so this must not double as a map of the
+    attack surface: it deliberately omits which optional features are enabled
+    (admin API, signal ingest, billing, webhook) and whether a secret is set --
+    those are reconnaissance for an attacker, not reassurance for an operator.
+    What remains describes only the protections that apply to every caller.
     """
     from security import backend_name  # imported lazily: security imports config
     return {
@@ -204,11 +205,5 @@ def security_status() -> dict:
                        "backend": backend_name()},
         "hsts": bool(IS_PROD and HSTS_SECONDS),
         "session_cookie_secure": bool(IS_PROD),
-        "secret_key_set": bool(os.environ.get("SECRET_KEY")),
-        "trust_proxy": TRUST_PROXY,
-        "admin_api": admin_configured(),
-        "signal_ingest": ingest_configured(),
-        "billing": billing_configured(),
-        "webhook": webhook_configured(),
     }
 

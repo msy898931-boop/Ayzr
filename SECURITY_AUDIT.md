@@ -5,7 +5,7 @@ dependencies, and the git history. Method: manual review of every route and
 input, static analysis (`bandit`), dependency scan (`pip-audit`), and live
 black-box probes against the running server.
 
-Date: 2026-10-25 (second pass)
+Date: 2026-10-25 (third pass)
 
 ## Summary
 
@@ -15,8 +15,50 @@ comparisons, CSRF + Content-Type guards, a nonce-based CSP, PBKDF2 password
 hashing, login lockout, and a strict secret-redaction logger. No SQL injection,
 command injection, path traversal, SSRF, or authentication-bypass was found.
 
-Seven issues were found and fixed across two passes, all reflected-input,
-output-escaping or abuse related. No High or Critical finding is open.
+Eleven issues were found and fixed across three passes, all reflected-input,
+output-escaping, log-forging or abuse related. No High or Critical finding is
+open.
+
+## Fixed findings (third pass)
+
+### 8. Log injection / log forging — Low/Medium
+
+Caller-controlled values were written to the audit log verbatim: the `<provider>`
+path segment on `POST /api/webhook/<provider>`, and the `email` on a failed
+login. A value containing a newline (``evil%0aadmin=granted``) forged a second,
+fake line in the operator's log — enough to hide real events, poison a log-based
+alert, or mislead an investigation (CWE-117). `security.redact()` now strips all
+C0 control characters (and DEL) before any value reaches a log line, and every
+log call in `server.py` passes its fields through `redact()`. Regression tests:
+`test_redact_strips_log_forging_characters`,
+`test_login_cannot_forge_a_log_line`.
+
+### 9. Attack-surface enumeration on a public endpoint — Low
+
+`GET /api/health` (unauthenticated) reported `providers` (which keys are
+configured) and, inside `security`, whether the admin API, signal ingest,
+billing and webhook were enabled, plus `secret_key_set` and `trust_proxy`. That
+is free reconnaissance: it tells an attacker exactly which optional surfaces are
+live and where to focus. The endpoint now returns only what the UI needs to
+label DEMO vs LIVE (provider, model, live, agent count, env, version, brand) and
+a defensive-posture summary that omits every "is this feature on?" flag.
+
+### 10. Session-scoped API responses were cacheable — Low
+
+`/api/me`, `/api/billing/history` and friends return the CSRF token, the user's
+plan and their invoices, but no `Cache-Control` was set, so an intermediary or
+shared cache could store them. All `/api/*` responses now carry
+`Cache-Control: no-store`.
+
+### 11. Rate-limit check was a read/modify race — Low
+
+`security.allow()` did `count(...) >= limit` and then a separate `add(...)`. Two
+requests arriving together could both read the same count and both pass, so a
+parallel burst briefly exceeded the configured limit (and the login lockout
+could be nudged past its threshold). The backends now expose a single atomic
+`hit(key, window, limit)` (a locked check-and-record in memory, an
+`INCR`-and-compare in Redis) and `allow()` is a one-liner over it. Regression
+test: `test_rate_limit_is_atomic_under_concurrency`.
 
 ## Fixed findings (second pass)
 
@@ -129,6 +171,16 @@ Regression test: `test_client_ip_ignores_client_supplied_forwarded_entries`.
   and logout; CSRF token rotated on privilege change.
 * **Headers** — CSP (nonce, no `unsafe-inline`), HSTS, `X-Frame-Options: DENY`,
   `nosniff`, `Referrer-Policy`, COOP/CORP, `Permissions-Policy`.
+* **Path traversal** — live probes (`/static/../app/config.py`, `%2e%2e`,
+  encoded slashes, `/.env`) all return 404; `/api/download` builds
+  `os.path.join(DOWNLOAD_DIR, <fixed name>)`, so no caller segment reaches the
+  filesystem path. Method tampering (`PUT`/`DELETE`/`PATCH` on a GET route) is
+  refused (403) by the CSRF guard; `TRACE` is 405.
+* **SSRF** — the only outbound URLs are operator-configured constants
+  (`PAYMENT_CANCEL_URL`, provider base URLs); no request field selects a host.
+* **ReDoS** — `llm.extract_json`'s fence regex is non-nested; a 200 KB hostile
+  reply parses in ~0.1 s. Provider replies are small and the call is bounded by
+  `TIMEOUT`.
 
 `bandit`'s remaining notices are false positives: the `urlopen` target is an
 operator-configured constant, the two SQL f-strings interpolate fixed column

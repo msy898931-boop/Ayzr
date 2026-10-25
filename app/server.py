@@ -125,7 +125,8 @@ def _guard_requests():
         return jsonify({"error": "unsupported_media_type",
                         "detail": "state-changing requests must be application/json"}), 415
     if not security.csrf_ok():
-        log.warning("csrf rejected path=%s ip=%s", request.path, client_ip())
+        log.warning("csrf rejected path=%s ip=%s",
+                    security.redact(request.path), security.redact(client_ip()))
         return jsonify({"error": "csrf_failed",
                         "detail": "missing or invalid CSRF token"}), 403
 
@@ -218,17 +219,18 @@ def admin_page():
 
 @app.route("/api/health")
 def api_health():
+    # Deliberately minimal: enough for the UI to label DEMO vs LIVE, and for a
+    # monitor to see liveness. It does not enumerate configured providers or
+    # optional features -- that is attack-surface reconnaissance on an
+    # unauthenticated endpoint.
     return jsonify({
         "ok": True,
         "provider": llm.provider_name(),
         "model": llm.model_name(),
         "live": llm.has_live_model(),
         "agents": len(roster.ALL_AGENTS),
-        "providers": llm.configured_providers(),
         "env": config.ENV,
         "version": config.VERSION,
-        "billing": config.billing_configured(),
-        "rate_limit_backend": security.backend_name(),
         "brand": config.BRAND_NAME,
         "security": config.security_status(),
     })
@@ -329,7 +331,8 @@ def api_signals_ingest():
     if row is None:
         return jsonify({"error": "invalid_signal"}), 400
     log.info("signal ingested id=%s channel=%s symbol=%s",
-             row["id"], row["channel"], row["symbol"])
+             row["id"], security.redact(row["channel"]),
+             security.redact(row["symbol"]))
     return jsonify({"ok": True, "signal": row}), 201
 
 
@@ -345,7 +348,7 @@ def api_register():
         return jsonify({"error": "invalid_or_taken"}), 400
     session["uid"] = user["id"]
     session.pop(security.CSRF_SESSION_KEY, None)  # rotate the token on privilege change
-    log.info("register ok ip=%s uid=%s", client_ip(), user["id"])
+    log.info("register ok ip=%s uid=%s", security.redact(client_ip()), user["id"])
     return jsonify({"user": user, "csrf": security.csrf_token()})
 
 
@@ -362,16 +365,18 @@ def api_login():
         # distinguishable from a wrong password by response time.
         db.verify_pw(b.get("password", ""), db.DUMMY_PW_HASH, db.DUMMY_PW_SALT)
         security.record_failure(f"login:{ip}")
-        log.warning("login failed ip=%s email=%s", ip, b.get("email", ""))
+        log.warning("login failed ip=%s email=%s",
+                    security.redact(ip), security.redact(b.get("email", "")))
         return jsonify({"error": "bad_credentials"}), 401
     if not db.verify_pw(b.get("password", ""), row["pw_hash"], row["salt"]):
         security.record_failure(f"login:{ip}")
-        log.warning("login failed ip=%s email=%s", ip, b.get("email", ""))
+        log.warning("login failed ip=%s email=%s",
+                    security.redact(ip), security.redact(b.get("email", "")))
         return jsonify({"error": "bad_credentials"}), 401
     security.record_success(f"login:{ip}")
     session.clear()               # fresh session on privilege change
     session["uid"] = row["id"]
-    log.info("login ok ip=%s uid=%s", ip, row["id"])
+    log.info("login ok ip=%s uid=%s", security.redact(ip), row["id"])
     return jsonify({"user": {"id": row["id"], "email": row["email"], "plan": row["plan"]},
                     "csrf": security.csrf_token()})
 
@@ -520,7 +525,8 @@ def api_webhook(provider: str):
     result = billing.settle(payload)
     code = 200 if result.get("status") in ("activated", "already", "ignored") else 400
     log.info("webhook provider=%s status=%s result=%s",
-             provider, result.get("status"), result)
+             security.redact(provider), security.redact(result.get("status")),
+             security.redact(result))
     return jsonify(result), code
 
 
