@@ -122,11 +122,64 @@ def test_plan_stop_uses_atr_when_account_can_afford_it(mods):
     s = snapshot(price=110, ema20=108, ema50=105, ema200=100, rsi14=60, atr14=2.0,
                  macd={"macd": 1, "signal": 0.5, "hist": 0.5}, adx14=30,
                  bollinger={"mid": 105, "upper": 120, "lower": 90},
-                 volume=130, volume_ratio=1.3)
-    # A funded account: the volatility stop is well inside the risk budget.
+                 volume=130, volume_ratio=1.3, support=None, resistance=None)
+    # A funded account with no level to lean on: the volatility stop wins.
     p = q.plan(s, q.decide(s), META, account=1_000_000, risk_pct=1.0)
     assert abs((p["entry"] - p["stop"]) - 1.5 * 2.0) < 1e-6  # 1.5 * ATR
     assert p["stop_mode"] == "volatility" and p["risk_capped"] is False
+
+
+def test_plan_stop_sits_beyond_support(mods):
+    """A long's stop goes under the nearest support, not at a fixed 1.5x ATR."""
+    q = mods["quant"]
+    s = snapshot(price=110, ema20=108, ema50=105, ema200=100, rsi14=60, atr14=2.0,
+                 macd={"macd": 1, "signal": 0.5, "hist": 0.5}, adx14=30,
+                 bollinger={"mid": 105, "upper": 120, "lower": 90},
+                 volume=130, volume_ratio=1.3, support=[105.0])
+    p = q.plan(s, q.decide(s), META, account=1_000_000, risk_pct=1.0)
+    assert p["stop_mode"] == "structure"
+    assert p["stop"] < 105.0                       # below the level
+    assert abs(p["stop"] - (105.0 - 0.25 * 2.0)) < 1e-6  # level minus buffer
+    assert abs(p["structure_stop"] - p["stop"]) < 1e-6   # == the stop here
+
+
+def test_plan_stop_sits_beyond_resistance(mods):
+    """A short's stop goes over the nearest resistance."""
+    q = mods["quant"]
+    s = snapshot(price=90, ema20=92, ema50=95, ema200=100, rsi14=40, atr14=2.0,
+                 macd={"macd": -1, "signal": -0.5, "hist": -0.5}, adx14=30,
+                 bollinger={"mid": 95, "upper": 110, "lower": 80},
+                 volume=130, volume_ratio=1.3, resistance=[95.0])
+    p = q.plan(s, q.decide(s), META, account=1_000_000, risk_pct=1.0)
+    assert p["stop_mode"] == "structure"
+    assert p["stop"] > 95.0                        # above the level
+    assert abs(p["stop"] - (95.0 + 0.25 * 2.0)) < 1e-6  # level plus buffer
+
+
+def test_plan_falls_back_to_atr_without_a_level(mods):
+    """No swing level on the protective side -> plain volatility stop."""
+    q = mods["quant"]
+    s = snapshot(price=110, ema20=108, ema50=105, ema200=100, rsi14=60, atr14=2.0,
+                 macd={"macd": 1, "signal": 0.5, "hist": 0.5}, adx14=30,
+                 bollinger={"mid": 105, "upper": 120, "lower": 90},
+                 volume=130, volume_ratio=1.3, support=None)
+    p = q.plan(s, q.decide(s), META, account=1_000_000, risk_pct=1.0)
+    assert p["stop_mode"] == "volatility"
+    assert abs((p["entry"] - p["stop"]) - 1.5 * 2.0) < 1e-6
+
+
+def test_plan_reports_the_structure_stop_it_gave_up(mods):
+    """When the risk budget caps a far level, the level distance is reported."""
+    q = mods["quant"]
+    s = snapshot(price=110, ema20=108, ema50=105, ema200=100, rsi14=60, atr14=2.0,
+                 macd={"macd": 1, "signal": 0.5, "hist": 0.5}, adx14=30,
+                 bollinger={"mid": 105, "upper": 120, "lower": 90},
+                 volume=130, volume_ratio=1.3, support=[80.0])  # far below
+    p = q.plan(s, q.decide(s), META, account=250, risk_pct=1.0)
+    assert p["stop_mode"] == "risk" and p["risk_capped"] is True
+    assert p["structure_stop_pips"] > p["stop_pips"]   # the level was wider
+    assert p["structure_stop"] < 80.0                  # level minus buffer
+    assert p["stop"] > p["structure_stop"]             # capped short of it
 
 
 def test_plan_caps_stop_to_the_risk_budget(mods):
@@ -158,12 +211,28 @@ def test_plan_flags_an_account_too_small_for_the_noise_floor(mods):
 
 def test_plan_risk_reward_is_two(mods):
     q = mods["quant"]
-    s = snapshot(price=110, ema20=108, ema50=105, ema200=100, rsi14=60,
+    # With no level to lean on and a funded account the stop is exactly the
+    # volatility stop, so the second target (2x that distance) is 2R.
+    s = snapshot(price=110, ema20=108, ema50=105, ema200=100, rsi14=60, atr14=1.0,
                  macd={"macd": 1, "signal": 0.5, "hist": 0.5}, adx14=30,
                  bollinger={"mid": 105, "upper": 120, "lower": 90},
-                 volume=130, volume_ratio=1.3)
-    p = q.plan(s, q.decide(s), META)
+                 volume=130, volume_ratio=1.3, support=None, resistance=None)
+    p = q.plan(s, q.decide(s), META, account=1_000_000, risk_pct=1.0)
+    assert p["stop_mode"] == "volatility"
     assert p["rr"] == 2.0  # second target is 2R
+
+
+def test_plan_structural_stop_changes_rr(mods):
+    """A wider structural stop lowers the RR honestly -- no target fiddling."""
+    q = mods["quant"]
+    s = snapshot(price=110, ema20=108, ema50=105, ema200=100, rsi14=60, atr14=1.0,
+                 macd={"macd": 1, "signal": 0.5, "hist": 0.5}, adx14=30,
+                 bollinger={"mid": 105, "upper": 120, "lower": 90},
+                 volume=130, volume_ratio=1.3, support=[105.0])
+    p = q.plan(s, q.decide(s), META, account=1_000_000, risk_pct=1.0)
+    assert p["stop_mode"] == "structure"
+    # stop is 5 + 0.25 = 5.25 wide, targets still 1x/2x/3x the 1.0 ATR vol stop
+    assert p["rr"] < 2.0 and p["rr"] > 0
 
 
 # -------------------------------------------------------------------- size

@@ -47,12 +47,16 @@ it** (`config.secret_key()` raises SystemExit). `wsgi.py` is the gunicorn entry.
   (XAUUSD/XAGUSD) are additionally anchored to a live *spot* feed -- see the
   gotcha below.
 - `app/quant.py`    — transparent rules: confluence score per side, stop,
-  3 targets, position sizing, cost estimate. The stop is *risk-based*: it is
-  floored at 1x ATR (never inside market noise) and capped at the distance a
-  0.01-lot trade can take inside the requested risk %; the tighter of that and
-  the 1.5x-ATR volatility stop wins, and `stop_mode` records which. When even
-  the floored stop needs more than the budget, `feasible=False` and
-  `size_position` says plainly how much balance the market needs.
+  3 targets, position sizing, cost estimate. The stop is *structural*: it sits
+  just beyond the nearest support (buy) or resistance (sell), padded by a small
+  ATR buffer, so it marks where the idea is actually invalidated. It is floored
+  at 1x ATR (never inside market noise) and capped at the distance a 0.01-lot
+  trade can take inside the requested risk %; `stop_mode` records which rule won
+  ("structure", "volatility" when no level exists, or "risk" when the budget
+  pulled it in), and `structure_stop_pips` keeps the level distance that was
+  given up. When even the floored stop needs more than the budget,
+  `feasible=False` and `size_position` says plainly how much balance the market
+  needs.
 - `app/agents.py`   — the 12 agents (single source of truth; used by prompts,
   demo engine and UI). 11 specialists + `chief`.
 - `app/engine.py`   — analyze / verify / advise / zones (vision) AND

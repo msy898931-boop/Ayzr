@@ -255,9 +255,13 @@ explain it clearly and flag anything that looks off -- NOT to invent numbers.
 
 Use ONLY the numbers provided. Never add prices that are not in the input.
 If the setup is weak or contradictory, say so plainly.
-The plan says how the stop was chosen: "stop_mode":"volatility" means the
-market's ATR stop is tight enough for the risk budget; "stop_mode":"risk" means
-the stop was tightened so a 0.01-lot trade fits the requested risk %. When
+The plan says how the stop was chosen: "stop_mode":"structure" means the stop
+sits just beyond the nearest support (for a buy) or resistance (for a sell) --
+the level that would prove the idea wrong; "stop_mode":"volatility" means no
+level was available, so a 1.5x ATR stop was used; "stop_mode":"risk" means the
+structural/volatility stop was tightened so a 0.01-lot trade fits the requested
+risk %. When "stop_mode" is "risk" and "structure_stop_pips" is larger than
+"stop_pips", the level is wider than the risk budget allows -- say so. When
 "feasible" is false (or size.warning is set), the account is too small for this
 market at that risk -- say so and give the "min_account_for_floor_stop" figure
 as the balance the market needs.

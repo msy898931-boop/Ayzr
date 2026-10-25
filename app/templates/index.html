@@ -524,8 +524,11 @@ const I18N = {
     q_support:"الدعم",q_resistance:"المقاومة",q_loading:"جارٍ قراءة السوق…",q_none:"لا توجد أداة محددة.",
     q_scan_empty:"لا نتائج بعد. اضغط \"امسح كل الأسواق\".",q_wait_note:"لا أفضليّة واضحة — الأفضل الانتظار.",
     q_stop_mode_risk:"مضبوط على المخاطرة",q_stop_mode_vol:"ستوب التقلّب (ATR)",
+    q_stop_mode_struct:"ستوب هيكلي (مستوى)",
     q_stop_hint_risk:"الستوب محسوب ليخاطر {r}% من رصيدك بأصغر حجم (0.01 لوت).",
     q_stop_hint_vol:"ستوب التقلّب أضيق من ميزانية المخاطرة، فهو المضبوط.",
+    q_stop_hint_struct:"الستوب تحت أقرب دعم (للشراء) أو فوق أقرب مقاومة (للبيع) مع هامش أمان صغير.",
+    q_stop_hint_level_wide:"المستوى الهيكلي أوسع ({p} نقطة) لكنه يتجاوز ميزانية المخاطرة.",
     q_not_feasible:"حسابك أصغر من أن يتحمّل هذا السوق بأمان — راجع التنبيه أدناه.",
     drop_msg:"اسحب صورة الشارت هنا أو اضغط للاختيار",lbl_symbol:"الرمز",lbl_tf:"الفريم",
     lbl_claim:"نص الإشارة / الادعاء (اختياري)",lbl_position:"تفاصيل صفقتك (اختياري)",lbl_mode:"وضع التحليل",
@@ -591,8 +594,11 @@ const I18N = {
     q_support:"Support",q_resistance:"Resistance",q_loading:"Reading the market…",q_none:"No instrument selected.",
     q_scan_empty:'No results yet. Press "Scan all markets".',q_wait_note:"No clear edge — best to wait.",
     q_stop_mode_risk:"Risk-based",q_stop_mode_vol:"Volatility stop (ATR)",
+    q_stop_mode_struct:"Structural stop (level)",
     q_stop_hint_risk:"Stop sized to risk {r}% of your balance at the minimum lot (0.01).",
     q_stop_hint_vol:"The volatility stop is tighter than the risk budget, so it is the one used.",
+    q_stop_hint_struct:"Stop sits under the nearest support (long) or over the nearest resistance (short), with a small safety buffer.",
+    q_stop_hint_level_wide:"The structural level is wider ({p} pips) but exceeds the risk budget.",
     q_not_feasible:"Your account is too small to trade this market safely — see the alert below.",
     drop_msg:"Drag a chart image here or click to choose",lbl_symbol:"Symbol",lbl_tf:"Timeframe",
     lbl_claim:"Signal text / claim (optional)",lbl_position:"Your position details (optional)",lbl_mode:"Analysis mode",
@@ -822,10 +828,16 @@ function renderQuant(R){
   if(p.entry){
     const stopTag = p.stop_mode==="risk"
       ? `<span class="badge" style="background:rgba(124,92,255,.18);color:var(--accent)">${t("q_stop_mode_risk")}</span>`
+      : p.stop_mode==="structure"
+      ? `<span class="badge" style="background:rgba(34,197,94,.16);color:var(--up)">${t("q_stop_mode_struct")}</span>`
       : `<span class="badge" style="background:rgba(34,211,238,.15);color:var(--accent2)">${t("q_stop_mode_vol")}</span>`;
-    const stopHint = p.stop_mode==="risk"
+    let stopHint = p.stop_mode==="risk"
       ? t("q_stop_hint_risk").replace("{r}", fmt(R.risk_pct,2))
+      : p.stop_mode==="structure"
+      ? t("q_stop_hint_struct")
       : t("q_stop_hint_vol");
+    if(p.stop_mode==="risk" && p.structure_stop_pips>p.stop_pips)
+      stopHint += " " + t("q_stop_hint_level_wide").replace("{p}", p.structure_stop_pips);
     html+=`<div class="kv">
       <div><small>${t("entry")}</small><b>${fmt(p.entry,dg)}</b></div>
       <div><small>${t("stop")} (${p.stop_pips} ${LANG==="ar"?"نقطة":"pips"}) ${stopTag}</small><b>${fmt(p.stop,dg)}</b></div>
@@ -874,7 +886,9 @@ async function runScan(){
       const d=R.decision,p=R.plan,sz=R.size,c=R.cost,dg=R.digits;
       const risky = sz.warning && sz.warning.level==="high";
       const lots = `${sz.lots??"—"}${risky?` <span title="${esc(LANG==="ar"?sz.warning.ar:sz.warning.en)}" style="color:var(--down)">⚠️</span>`:""}`;
-      const stop = p.stop?`${fmt(p.stop,dg)}${p.stop_mode==="risk"?' <small style="color:var(--accent)">R</small>':""}`:"—";
+      const stopMark = p.stop_mode==="risk" ? ' <small style="color:var(--accent)">R</small>'
+        : p.stop_mode==="structure" ? ' <small style="color:var(--up)">S</small>' : "";
+      const stop = p.stop?`${fmt(p.stop,dg)}${stopMark}`:"—";
       return `<tr><td><b>${R.symbol}</b></td><td>${fmt(R.price,dg)}</td>
         <td><span class="pill ${d.verdict==="WAIT"?"":d.verdict}" style="${d.verdict==="WAIT"?"background:rgba(240,185,11,.15);color:var(--wait)":""}">${d.verdict}</span></td>
         <td>${d.confidence}%</td>

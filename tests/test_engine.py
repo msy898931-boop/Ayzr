@@ -145,6 +145,25 @@ def test_quant_analyze_plan_is_risk_aware(clean, monkeypatch):
     assert rich["size"]["actual_pct"] <= 1.0
 
 
+def test_quant_analyze_stop_leans_on_structure(clean, monkeypatch):
+    """When a level exists, the stop is anchored to it, not to a bare ATR."""
+    e, market = clean["engine"], clean["market"]
+    monkeypatch.setattr(market, "fetch", lambda s, tf="H1", bars=300: ohlc())
+    orig = market.snapshot
+
+    def with_support(o):
+        s = orig(o)
+        s["support"] = [s["price"] - 2.0]   # a level just under the market
+        return s
+
+    monkeypatch.setattr(market, "snapshot", with_support)
+    out = e.quant_analyze("XAUUSD", "H1", account=1_000_000, risk_pct=1.0,
+                          explain=False)
+    if out["decision"]["verdict"] == "BUY":
+        assert out["plan"]["stop_mode"] == "structure"
+        assert out["plan"]["stop"] < out["price"] - 2.0   # beyond the support
+
+
 def test_quant_analyze_flags_account_too_small(clean, monkeypatch):
     e, market = clean["engine"], clean["market"]
     monkeypatch.setattr(market, "fetch", lambda s, tf="H1", bars=300: ohlc())

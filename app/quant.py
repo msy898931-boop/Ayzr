@@ -25,6 +25,7 @@ COST_PIPS = {
 MIN_LOT = 0.01
 ATR_STOP_MULT = 1.5      # structural (volatility) stop
 MIN_STOP_ATR = 1.0       # never place a stop tighter than this: it is noise
+STRUCTURE_BUFFER_ATR = 0.25  # pad a level so normal wick noise cannot tag it
 
 
 def _score_side(s: dict, side: str) -> tuple[int, list[dict]]:
@@ -109,15 +110,39 @@ def decide(s: dict) -> dict:
     }
 
 
+def _nearest_level(levels, price: float, side: str) -> float | None:
+    """The closest swing level on the protective side of `price`.
+
+    For a long the stop goes *below* support, for a short *above* resistance,
+    so we pick the nearest level strictly on that side and ignore anything that
+    is not (a "support" above price is really resistance -- `swing_levels`
+    already filters this, but a caller could pass anything).
+    """
+    if not levels:
+        return None
+    if side == "BUY":
+        below = [x for x in levels if x < price]
+        return max(below) if below else None
+    above = [x for x in levels if x > price]
+    return min(above) if above else None
+
+
 def plan(s: dict, decision: dict, meta: dict, rr: tuple = (1.0, 2.0, 3.0),
          account: float = 200.0, risk_pct: float = 1.0) -> dict:
     """Entry, stop and three targets.
 
-    The stop must sit beyond market noise, so its floor is 1x ATR. Above that
-    floor it is the widest distance that keeps a 0.01-lot trade inside
-    ``risk_pct`` of ``account``; a market-volatility stop (1.5x ATR) is also
-    computed and wins whenever it is tighter, so a funded account behaves as
-    before. Targets stay anchored to volatility, so the risk:reward is honest.
+    The stop sits *beyond a structural level* when one is available: under the
+    nearest support for a long, over the nearest resistance for a short, padded
+    by a small ATR buffer so an ordinary wick cannot tag it. That is where the
+    market itself says the idea is wrong, and it is more honest than a fixed
+    multiple of ATR. Two floors still apply: 1x ATR (beyond noise) and, when the
+    account is small, the widest distance that keeps a 0.01-lot trade inside
+    ``risk_pct`` of ``account``. If the level lies further than the risk budget
+    allows, the stop is pulled to the budget (``stop_mode="risk"``) and the
+    level-based distance is still reported in ``structure_stop`` /
+    ``structure_stop_pips`` so the caller can say what was given up.
+
+    Targets stay anchored to volatility, so the risk:reward stays honest.
     When the account is too small to fund a sane stop at 0.01 lots, the stop is
     floored and the trade is flagged ``feasible=False`` with the balance that
     *would* fit -- never a silent 20%-risk trade.
@@ -134,7 +159,18 @@ def plan(s: dict, decision: dict, meta: dict, rr: tuple = (1.0, 2.0, 3.0),
     floor_stop = MIN_STOP_ATR * atr
     risk_money = max(0.0, account) * max(0.0, risk_pct) / 100
     budget_stop = (risk_money / (MIN_LOT * per_price)) if per_price > 0 else vol_stop
-    stop_dist = min(vol_stop, max(floor_stop, budget_stop))
+
+    # Structural stop: just past the level that would prove the idea wrong.
+    levels = s.get("support") if side == "BUY" else s.get("resistance")
+    level = _nearest_level(levels, price, side)
+    buffer = STRUCTURE_BUFFER_ATR * atr
+    if level is not None:
+        structure_dist = abs(price - level) + buffer
+    else:
+        structure_dist = vol_stop
+    # Structure is preferred over a bare ATR multiple, but never tighter than
+    # the noise floor and never wider than the risk budget will fund.
+    stop_dist = min(structure_dist, max(floor_stop, budget_stop))
     feasible = budget_stop >= floor_stop
 
     # Balance needed to fund each stop at 0.01 lots within the risk budget.
@@ -158,6 +194,7 @@ def plan(s: dict, decision: dict, meta: dict, rr: tuple = (1.0, 2.0, 3.0),
     if decision["verdict"] == "WAIT":
         return {**base, "entry": None, "stop": None, "targets": None, "rr": None,
                 "stop_pips": None, "risk_capped": False, "stop_mode": None,
+                "structure_stop": None, "structure_stop_pips": None,
                 "feasible": feasible}
 
     sign = 1 if side == "BUY" else -1
@@ -165,7 +202,15 @@ def plan(s: dict, decision: dict, meta: dict, rr: tuple = (1.0, 2.0, 3.0),
     targets = [price + sign * m * vol_stop for m in rr]
     risk = abs(price - stop)
     reward = abs(targets[1] - price)
-    risk_capped = stop_dist < vol_stop
+    risk_capped = stop_dist < structure_dist
+    # "structure" when the level set the stop, "volatility" when ATR did (no
+    # level), "risk" when the risk budget pulled it in.
+    if risk_capped:
+        stop_mode = "risk"
+    elif level is not None:
+        stop_mode = "structure"
+    else:
+        stop_mode = "volatility"
 
     return {
         **base,
@@ -175,7 +220,9 @@ def plan(s: dict, decision: dict, meta: dict, rr: tuple = (1.0, 2.0, 3.0),
         "stop_pips": round(risk / pip, 1),
         "rr": round(reward / risk, 2) if risk else None,
         "risk_capped": bool(risk_capped),
-        "stop_mode": "risk" if risk_capped else "volatility",
+        "stop_mode": stop_mode,
+        "structure_stop": round(price - sign * structure_dist, digits),
+        "structure_stop_pips": round(structure_dist / pip, 1),
         "feasible": feasible,
     }
 
