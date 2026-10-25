@@ -1,0 +1,38 @@
+# Fly.io configuration — deploy with: fly launch --no-deploy && fly deploy
+# Docs: https://fly.io/docs/reference/configuration/
+app = "aurora-markets"
+primary_region = "fra"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  TRADLI_ENV = "production"
+  # Fly's proxy sets X-Forwarded-For; trust it so rate limits see real IPs.
+  TRUST_PROXY = "true"
+  # SQLite lives on the mounted volume (see [mounts]).
+  TRADLI_DB = "/data/tradli.db"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 200
+    soft_limit = 100
+
+# A single small VM is plenty for SQLite; keep it at one so writes never race.
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+[mounts]
+  source = "aurora_data"
+  destination = "/data"
+
+# SECRET_KEY and provider keys are secrets — set them with:
+#   fly secrets set SECRET_KEY=$(python -c "import secrets;print(secrets.token_hex(32))")

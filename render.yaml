@@ -1,0 +1,38 @@
+# Render Blueprint — one-click deploy of Aurora Markets.
+# Docs: https://render.com/docs/blueprint-spec
+#
+# The app stores its SQLite database under data/ (TRADLI_DB), so it needs a
+# persistent disk to survive a redeploy. Disks are available on paid plans;
+# on the free plan the database resets on every deploy (fine for a demo).
+services:
+  - type: web
+    name: aurora-markets
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: TRADLI_ENV
+        value: production
+      # Render terminates TLS and forwards the client IP; trust that proxy.
+      - key: TRUST_PROXY
+        value: "true"
+      # Render generates a strong value and keeps it stable across deploys.
+      - key: SECRET_KEY
+        generateValue: true
+      # Optional model providers — set values in the dashboard. Without any,
+      # the app runs in DEMO mode and still works.
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      # Contact address used by /legal and /.well-known/security.txt.
+      - key: CONTACT_EMAIL
+        sync: false
+    disk:
+      name: aurora-data
+      mountPath: /srv/tradli/data
+      sizeGB: 1

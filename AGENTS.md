@@ -40,6 +40,9 @@ docker compose up -d --build                   # image + volume for data/
 ```
 `TRADLI_ENV=production` requires `SECRET_KEY` and **refuses to boot without
 it** (`config.secret_key()` raises SystemExit). `wsgi.py` is the gunicorn entry.
+One-click configs: `render.yaml` (Render Blueprint) and `fly.toml` (Fly.io);
+both mount a persistent disk so the SQLite DB at `data/tradli.db` survives a
+redeploy. CI builds and health-checks the image (`docker` job).
 
 ## Live vs demo — IMPORTANT
 - No LLM key  -> `llm.provider_name()` returns "demo"; every payload has

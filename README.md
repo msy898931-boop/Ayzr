@@ -442,6 +442,30 @@ SECRET_KEY=<المفتاح> docker compose up -d --build
 TRADLI_ENV=production SECRET_KEY=<المفتاح> gunicorn -c gunicorn.conf.py wsgi:app
 ```
 
+### النشر على استضافة (سحابي)
+
+المشروع جاهز للنشر بلا تعديل. ملفات جاهزة في المستودع:
+
+| المنصة | الملف | الخطوات |
+|---|---|---|
+| **Render** | `render.yaml` | اربط المستودع من لوحة Render → New → Blueprint (يقرأ الملف تلقائياً) |
+| **Fly.io** | `fly.toml` | `fly launch --no-deploy` ثم `fly deploy` |
+| **Docker عام** | `Dockerfile` | `docker build -t aurora . && docker run -p 8000:8000 -e SECRET_KEY=... aurora` |
+
+**أسرار لازم تضبطها في لوحة الاستضافة** (لا تضعها في المستودع أبداً):
+
+| المتغيّر | إلزامي؟ | ملاحظة |
+|---|---|---|
+| `SECRET_KEY` | ✅ إلزامي في الإنتاج | `python -c "import secrets;print(secrets.token_hex(32))"` |
+| `TRUST_PROXY` | موصى به | `true` خلف وكيل الاستضافة (Render/Fly) |
+| `GEMINI_API_KEY` أو `GROQ_API_KEY` أو `OPENROUTER_API_KEY` | اختياري | بدونها يعمل بوضع DEMO |
+| `CONTACT_EMAIL` | اختياري | لبريد التواصل و`/.well-known/security.txt` |
+| `TRADLI_DB` | اختياري | مسار قاعدة SQLite (افتراضياً `data/tradli.db`) |
+
+> **مهم — القرص الدائم:** قاعدة البيانات SQLite تُكتب تحت `data/`. على أي
+> استضافة بلا قرص دائم (مثل الخطة المجانية) تُصفَّر البيانات عند كل نشر.
+> `render.yaml` و`fly.toml` يضبطان قرصاً دائماً لهذا السبب.
+
 ---
 
 ## المساهمة والتوثيق

@@ -12,6 +12,9 @@ The current version is defined once, in `app/config.py` (`VERSION`).
 - Project documentation set: `SECURITY.md`, `CONTRIBUTING.md`, this changelog.
 - `ruff` lint configuration (`ruff.toml`) and a lint step in CI.
 - Dependabot configuration for pip and GitHub Actions.
+- One-click deploy configs: `render.yaml` (Render Blueprint) and `fly.toml`
+  (Fly.io), both with a persistent disk for the SQLite database.
+- A CI job that builds the Docker image, so the deploy path stays valid.
 
 ## [1.9.0] - 2026-10-25
 
