@@ -21,7 +21,7 @@ PORT=12001 python app/server.py        # http://localhost:12001
 ## Test
 ```
 pip install -r requirements-dev.txt
-python -m pytest -q                    # 215 tests
+python -m pytest -q                    # 254 tests
 python -m pytest --cov=app --cov-report=term-missing
 ```
 Tests blank every provider key in `conftest.py`, so the suite never makes a
