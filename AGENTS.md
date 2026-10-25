@@ -23,10 +23,15 @@ PORT=12001 python app/server.py        # http://localhost:12001
 pip install -r requirements-dev.txt
 python -m pytest -q                    # 254 tests
 python -m pytest --cov=app --cov-report=term-missing
+ruff check .                           # lint (ruff.toml; enforced in CI)
 ```
 Tests blank every provider key in `conftest.py`, so the suite never makes a
 network/model call and always exercises the DEMO path. `market.fetch` is
 monkeypatched in the engine tests. Coverage is measured over `app/`.
+
+## Docs
+`SECURITY.md` (reporting + security model), `CONTRIBUTING.md` (setup, rules,
+PR flow), `CHANGELOG.md` (history). Keep them current with user-visible changes.
 
 ## Deploy
 ```

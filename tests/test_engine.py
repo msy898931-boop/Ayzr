@@ -7,7 +7,6 @@ candle series, and the LLM layer is exercised by swapping `llm.complete`.
 """
 from __future__ import annotations
 
-import base64
 import struct
 import zlib
 

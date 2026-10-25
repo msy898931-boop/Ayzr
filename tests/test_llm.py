@@ -8,8 +8,6 @@ a model may have truncated mid-stream.
 """
 from __future__ import annotations
 
-import os
-
 
 # ------------------------------------------------------------ provider state
 def test_no_key_means_demo(mods, monkeypatch):

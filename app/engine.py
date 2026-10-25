@@ -27,6 +27,7 @@ import demo
 import imaging
 import llm
 
+
 # The model is told the product's configured name, so a white-label deployment
 # does not leak another brand into its own prompts.
 def _brand(prompt: str) -> str:

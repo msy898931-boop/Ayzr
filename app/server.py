@@ -26,8 +26,7 @@ import secrets
 import sys
 import time
 
-from flask import (Flask, g, jsonify, render_template, request, send_file,
-                   session)
+from flask import Flask, g, jsonify, render_template, request, send_file, session
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -48,6 +47,8 @@ def _load_dotenv(path: str) -> None:
 
 _load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"))
 
+import logging  # noqa: E402
+
 import agents as roster  # noqa: E402
 import billing  # noqa: E402
 import config  # noqa: E402
@@ -56,8 +57,6 @@ import engine  # noqa: E402
 import imaging  # noqa: E402
 import llm  # noqa: E402
 import security  # noqa: E402
-
-import logging  # noqa: E402
 
 ROOT = config.ROOT
 DOWNLOAD_DIR = os.path.join(ROOT, "dist")

@@ -255,7 +255,7 @@ def macd(closes: list[float], fast: int = 12, slow: int = 26, signal: int = 9):
     ef = ema_series(closes, fast)
     es = ema_series(closes, slow)
     line = [(a - b) if (a is not None and b is not None) else None
-            for a, b in zip(ef, es)]
+            for a, b in zip(ef, es, strict=True)]
     clean = [v for v in line if v is not None]
     if len(clean) < signal:
         return None
@@ -360,10 +360,10 @@ def swing_levels(highs, lows, price: float, lookback: int = 5, count: int = 3):
 
 def snapshot(ohlc: dict) -> dict:
     """Every indicator we use, at the latest bar."""
-    c, h, l, v = ohlc["close"], ohlc["high"], ohlc["low"], ohlc["volume"]
+    c, h, low, v = ohlc["close"], ohlc["high"], ohlc["low"], ohlc["volume"]
     price = c[-1]
-    a = atr(h, l, c, 14)
-    resistance, support = swing_levels(h, l, price)
+    a = atr(h, low, c, 14)
+    resistance, support = swing_levels(h, low, price)
     vol_avg = sma(v, 20)
     return {
         "price": price,
@@ -373,8 +373,8 @@ def snapshot(ohlc: dict) -> dict:
         "atr14": a,
         "atr_pct": (a / price * 100) if (a and price) else None,
         "bollinger": bollinger(c),
-        "adx14": adx(h, l, c, 14),
-        "stoch": stochastic(h, l, c),
+        "adx14": adx(h, low, c, 14),
+        "stoch": stochastic(h, low, c),
         "resistance": resistance,
         "support": support,
         "volume": v[-1],

@@ -195,7 +195,6 @@ def test_csp_has_nonce_and_no_unsafe_inline(client):
 def test_hsts_only_in_production(client, clean):
     """Development must not pin HSTS -- it would break plain http://localhost."""
     assert "Strict-Transport-Security" not in client.get("/").headers
-    resp = clean["server"].app.test_request_context()
     # Exercise the header builder directly with is_prod=True.
     from flask import Response
     r = clean["security"].apply_security_headers(Response("x"), "nonce", is_prod=True)

@@ -1,0 +1,24 @@
+# Ruff configuration. Run: ruff check .
+# Deliberately conservative: correctness rules first, no opinionated style
+# churn on a codebase that already has a consistent hand-written style.
+
+line-length = 100
+target-version = "py311"
+exclude = [".venv", "venv", "data", "dist", "android", "__pycache__"]
+
+[lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes (undefined names, unused imports, ...)
+    "I",   # import sorting
+    "UP",  # pyupgrade (modern syntax)
+    "B",   # flake8-bugbear (likely bugs)
+    "C4",  # flake8-comprehensions
+]
+ignore = [
+    "E501",  # line length is handled by the formatter/eyeballs, not enforced
+    "B008",  # function calls in default args are fine for our Flask patterns
+]
+
+[lint.per-file-ignores]
+"tests/*" = ["B011"]  # assert False is fine in test helpers

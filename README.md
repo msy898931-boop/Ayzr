@@ -1,5 +1,10 @@
 # Aurora Markets — منصة تحليل الأسواق بالذكاء الاصطناعي
 
+[![tests](https://github.com/msy898931-boop/Ayzr/actions/workflows/tests.yml/badge.svg)](https://github.com/msy898931-boop/Ayzr/actions/workflows/tests.yml)
+[![python](https://img.shields.io/badge/python-3.11%20%7C%203.13-blue)](https://github.com/msy898931-boop/Ayzr/blob/main/requirements.txt)
+[![license](https://img.shields.io/badge/license-Proprietary-red)](LICENSE)
+[![lint: ruff](https://img.shields.io/badge/lint-ruff-261230)](https://github.com/astral-sh/ruff)
+
 نسخة مبنية من الصفر مستوحاة من فكرة **TradliAI**: تحليل شارتات التداول
 بصورة، كشف الإشارات المزيفة، مستشار صفقات، ومناطق عرض/طلب — كل ذلك عبر
 **12 وكيل ذكاء اصطناعي** (11 متخصص + محلّل رئيسي)، مع واجهة **عربي/إنجليزي**.
@@ -435,5 +440,23 @@ SECRET_KEY=<المفتاح> docker compose up -d --build
 
 ```bash
 TRADLI_ENV=production SECRET_KEY=<المفتاح> gunicorn -c gunicorn.conf.py wsgi:app
+```
+
+---
+
+## المساهمة والتوثيق
+
+| المستند | المحتوى |
+|---|---|
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | الإعداد، القواعد، الالتزام، وفتح PR |
+| [`SECURITY.md`](SECURITY.md) | الإبلاغ عن الثغرات ونموذج الأمان |
+| [`CHANGELOG.md`](CHANGELOG.md) | سجلّ التغييرات |
+| [`AGENTS.md`](AGENTS.md) | خريطة الكود والقواعد للمساعدين الآليين |
+
+قبل الدفع:
+
+```bash
+python -m pytest -q     # كل الاختبارات
+ruff check .            # فحص الأسلوب (مُفعّل في CI)
 ```
 
