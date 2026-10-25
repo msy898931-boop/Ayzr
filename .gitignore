@@ -17,3 +17,4 @@ android/keystore/
 htmlcov/
 *.db
 .agent_tmp/
+.run/
