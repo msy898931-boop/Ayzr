@@ -8,13 +8,27 @@ The current version is defined once, in `app/config.py` (`VERSION`).
 
 ## [Unreleased]
 
+### Security
+- Fixed a reflected XSS: `/api/quant` and `/api/scan` echoed the caller's
+  `symbol`/`timeframe` in the error `detail`, which the UI interpolated into
+  `innerHTML`. The front end now escapes every error `detail`, and the server
+  no longer echoes caller input in those two errors.
+- `/api/providers` is now rate limited and its probe result is cached for 30s,
+  so it can no longer be used to drain provider quota.
+- `client_ip()` now reads `X-Forwarded-For` from the right (`TRUSTED_PROXY_HOPS`,
+  default 1) instead of the leftmost entry, closing an IP-spoofing bypass of the
+  rate limits and login lockout. See `SECURITY_AUDIT.md`.
+
 ### Added
 - Project documentation set: `SECURITY.md`, `CONTRIBUTING.md`, this changelog.
+- `SECURITY_AUDIT.md`: full review, findings and fixes.
 - `ruff` lint configuration (`ruff.toml`) and a lint step in CI.
 - Dependabot configuration for pip and GitHub Actions.
 - One-click deploy configs: `render.yaml` (Render Blueprint) and `fly.toml`
   (Fly.io), both with a persistent disk for the SQLite database.
 - A CI job that builds the Docker image, so the deploy path stays valid.
+- `scripts/serve.sh` and `scripts/watchdog.sh`: a production start script and a
+  health watchdog that restarts the app if it goes down.
 
 ## [1.9.0] - 2026-10-25
 

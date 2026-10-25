@@ -231,3 +231,48 @@ def test_register_is_rate_limited(client, clean):
                         json={"email": f"u{i}@tradli.io", "password": "secret123"})
         codes.append(r.status_code)
     assert 429 in codes
+
+
+# ------------------------------------------------------- reflected-input guard
+# A caller-controlled value must never be echoed back in an error body: the UI
+# interpolates ``detail`` into innerHTML, so echoing it would turn any error into
+# an XSS sink. These pin the server side of that rule.
+def test_quant_does_not_echo_the_symbol(client, clean):
+    payload = "<img src=x onerror=alert(1)>"
+    r = client.get(f"/api/quant?symbol={payload}")
+    assert r.status_code == 400
+    body = r.get_data(as_text=True)
+    assert "<img" not in body
+    assert "onerror" not in body
+    assert payload not in body
+
+
+def test_scan_rejects_a_bad_timeframe_without_echoing_it(client, clean):
+    payload = "<script>alert(1)</script>"
+    r = client.get(f"/api/scan?timeframe={payload}")
+    assert r.status_code == 400
+    body = r.get_data(as_text=True)
+    assert "<script" not in body
+    assert payload not in body
+
+
+def test_client_ip_ignores_client_supplied_forwarded_entries(mods):
+    """Only the entry a trusted hop appended counts; the rest is spoofable."""
+    server, config = mods["server"], mods["config"]
+    old_trust, old_hops = config.TRUST_PROXY, config.TRUSTED_PROXY_HOPS
+    config.TRUST_PROXY, config.TRUSTED_PROXY_HOPS = True, 1
+    try:
+        with server.app.test_request_context(
+                "/", headers={"X-Forwarded-For": "9.9.9.9, 203.0.113.7"}):
+            assert server.client_ip() == "203.0.113.7"
+    finally:
+        config.TRUST_PROXY, config.TRUSTED_PROXY_HOPS = old_trust, old_hops
+
+
+def test_providers_is_rate_limited(client, clean):
+    """Probing providers spends real provider quota, so it must be throttled."""
+    clean["config"].RATE_LIMIT_CALLS = 2
+    codes = [client.get("/api/providers").status_code for _ in range(6)]
+    assert 429 in codes
+
+

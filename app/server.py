@@ -87,11 +87,21 @@ db.seed_signals()
 
 # ------------------------------------------------------------------ helpers
 def client_ip() -> str:
-    """Best-effort caller identity for rate limiting and login lockout."""
+    """Best-effort caller identity for rate limiting and login lockout.
+
+    Behind a proxy, the caller's address is the entry the *last* trusted hop
+    appended. ``X-Forwarded-For`` is a client-controlled list, so we count
+    ``TRUSTED_PROXY_HOPS`` from the right and ignore anything further left --
+    reading the leftmost value (as a naive implementation does) lets anyone
+    forge an IP and bypass every limit.
+    """
     if config.TRUST_PROXY:
         fwd = request.headers.get("X-Forwarded-For", "")
-        if fwd:
-            return fwd.split(",")[0].strip()
+        parts = [p.strip() for p in fwd.split(",") if p.strip()]
+        if parts:
+            hops = max(1, config.TRUSTED_PROXY_HOPS)
+            idx = len(parts) - hops
+            return parts[idx] if idx >= 0 else parts[0]
     return request.remote_addr or "unknown"
 
 
@@ -241,7 +251,13 @@ def security_txt():
 
 @app.route("/api/providers")
 def api_providers():
-    """Which configured keys actually answer right now."""
+    """Which configured keys actually answer right now.
+
+    Rate limited and short-cached: each probe spends a real provider request, so
+    an unthrottled public endpoint would be an outbound amplifier.
+    """
+    if not security.allow(f"providers:{client_ip()}"):
+        return jsonify({"error": "rate_limited"}), 429
     return jsonify({"results": llm.probe_all(),
                     "active": llm.provider_name()})
 
@@ -589,8 +605,10 @@ def api_quant():
         return jsonify(engine.quant_analyze(symbol, timeframe, account, risk))
     except market.MarketError as exc:
         return jsonify({"error": "market", "detail": str(exc)}), 502
-    except ValueError as exc:
-        return jsonify({"error": "bad_symbol", "detail": str(exc)}), 400
+    except ValueError:
+        # Never echo the caller's symbol back: it is reflected into the UI.
+        return jsonify({"error": "bad_symbol",
+                        "detail": "unknown symbol or timeframe"}), 400
 
 
 @app.route("/api/scan")
@@ -600,6 +618,11 @@ def api_scan():
     if not security.allow(f"ip:{client_ip()}"):
         return jsonify({"error": "rate_limited"}), 429
     timeframe = request.args.get("timeframe", "H1")
+    # Validate before the loop: a bogus value would otherwise be echoed into
+    # every row's error text (and reflected into the UI).
+    if timeframe.upper() not in market.TIMEFRAMES:
+        return jsonify({"error": "bad_timeframe",
+                        "detail": "unknown timeframe"}), 400
     account = _num("account", 200.0)
     risk = _num("risk", 1.0)
     try:

@@ -781,7 +781,7 @@ async function runTool(feat, pane){
     const d = await r.json();
     if(r.status===401){ openModal(); setResult(feat, `<p class="err">${t("need_auth")}</p>`); }
     else if(r.status===402){ setResult(feat, `<p class="err">${t("quota")}</p>`); }
-    else if(!r.ok){ setResult(feat, `<p class="err">${d.detail||t("error")}</p>`); }
+    else if(!r.ok){ setResult(feat, `<p class="err">${esc(d.detail||d.error||t("error"))}</p>`); }
     else { render(feat, d.result); refreshMe(); }
   }catch(e){ setResult(feat, `<p class="err">${t("error")}</p>`); }
   btn.disabled = false; btn.innerHTML = old;
@@ -812,7 +812,7 @@ async function runQuant(){
   try{
     const r=await fetch(`/api/quant?symbol=${sym}&timeframe=${tf}&account=${acct}&risk=${risk}`);
     const R=await r.json();
-    if(!r.ok){ setLive(`<p class="err">${R.detail||R.error||t("error")}</p>`); return; }
+    if(!r.ok){ setLive(`<p class="err">${esc(R.detail||R.error||t("error"))}</p>`); return; }
     renderQuant(R); window._liveDone = true;
   }catch(e){ setLive(`<p class="err">${t("error")}</p>`); }
 }
@@ -884,7 +884,7 @@ async function runScan(){
   try{
     const r=await fetch(`/api/scan?timeframe=${tf}&account=${acct}&risk=${risk}`);
     const D=await r.json();
-    if(!r.ok){ tb.innerHTML=`<tr><td colspan="9" class="err">${D.detail||t("error")}</td></tr>`; return; }
+    if(!r.ok){ tb.innerHTML=`<tr><td colspan="9" class="err">${esc(D.detail||D.error||t("error"))}</td></tr>`; return; }
     tb.innerHTML=(D.results||[]).map(R=>{
       const d=R.decision,p=R.plan,sz=R.size,c=R.cost,dg=R.digits;
       const risky = sz.warning && sz.warning.level==="high";

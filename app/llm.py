@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
 
 import config
 
@@ -138,8 +139,24 @@ def probe(provider: str) -> dict:
     return {"provider": provider, "model": models[0], "ok": False, "error": last}
 
 
+_probe_cache: dict = {"at": 0.0, "rows": []}
+_PROBE_TTL = 30.0
+
+
 def probe_all() -> list[dict]:
-    return [probe(p) for p in configured_providers()]
+    """Probe every configured provider, cached for a short window.
+
+    Each call spends a real request against the provider's quota, so the result
+    is cached: a public caller cannot turn this into a quota-drain or an
+    outbound-request amplifier.
+    """
+    now = time.time()
+    if _probe_cache["rows"] and now - _probe_cache["at"] < _PROBE_TTL:
+        return _probe_cache["rows"]
+    rows = [probe(p) for p in configured_providers()]
+    _probe_cache["at"] = now
+    _probe_cache["rows"] = rows
+    return rows
 
 
 def model_name() -> str:

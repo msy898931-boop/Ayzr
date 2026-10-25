@@ -67,6 +67,12 @@ RATE_LIMIT_WINDOW = _int("RATE_LIMIT_WINDOW", 60)
 
 TRUST_PROXY = _bool("TRUST_PROXY", False)
 
+# How many reverse proxies you control sit in front of the app. The caller's
+# real address is the entry the *last* trusted proxy appended -- counting that
+# many from the right of X-Forwarded-For. The leftmost entries are supplied by
+# the client, so trusting them lets anyone forge an IP and defeat rate limits.
+TRUSTED_PROXY_HOPS = _int("TRUSTED_PROXY_HOPS", 1)
+
 # Optional Redis for rate limiting. Unset (the default) keeps the counters in
 # process, which is correct for a single worker. Set it to share one limit
 # across every gunicorn worker and host: redis://host:6379/0
